@@ -71,10 +71,13 @@ const CreateEvent: React.FC = () => {
       };
 
       const response = await axios.post(`${API_URL}/api/events`, payload);
-      console.log('✅ Event created:', response.data);
-      
-      // Navigate to the invitation page with the event ID
-      navigate(`/events/${response.data._id}/invite`);
+      if (response.status === 201) {
+        console.log('✅ Event created:', response.data);
+        // Navigate to the invitation page with the event ID
+        navigate(`/events/${response.data._id}/invite`);
+      } else {
+        alert('Failed to create event.');
+      }
     } catch (error) {
       console.error('❌ Error creating event:', error);
       alert('Failed to create event.');
