@@ -15,6 +15,7 @@ interface IEvent {
   date: string;
   location: string;
   token: string;
+  shareableLink?: string;
 }
 
 const InviteGuests: React.FC = () => {
@@ -92,7 +93,7 @@ const InviteGuests: React.FC = () => {
         <p>Date: {new Date(event.date).toLocaleString()}</p>
         <p>Location: {event.location}</p>
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          Share this link with guests: {window.location.origin}/event/{event.token}
+          Share this link with guests: {event.shareableLink || 'Loading...'}
         </p>
       </div>
 
