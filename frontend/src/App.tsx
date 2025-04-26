@@ -92,7 +92,7 @@ const App: React.FC = () => {
               <Route path="/create-event" element={<CreateEvent />} />
               <Route path="/events/:id/invite" element={<InviteGuests />} />
               <Route path="/events/:id/manage" element={<ManageEvent />} />
-              <Route path="/event/guest/:token" element={<EventGuestView />} />
+              <Route path="/event/guest" element={<EventGuestView />} />
             </Routes>
           </div>
         </div>
