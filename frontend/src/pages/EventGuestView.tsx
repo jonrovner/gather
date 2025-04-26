@@ -28,6 +28,8 @@ const EventGuestView: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [claimingName, setClaimingName] = useState('');
   const [selectedNeed, setSelectedNeed] = useState<string | null>(null);
+  console.log("rendering");
+  
 
   useEffect(() => {
     const fetchEvent = async () => {

@@ -72,7 +72,7 @@ const App: React.FC = () => {
                   onClick={() => setIsDark(!isDark)}
                   className="px-3 py-1 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
                 >
-                  {isDark ? `🌞 ${t('common.light')}` : `🌙 ${t('common.dark')}`}
+                  {isDark ? `🌙 ${t('common.dark')}` : `🌞 ${t('common.light')}`}
                 </button>
               </div>
             </nav>
@@ -102,3 +102,4 @@ const App: React.FC = () => {
 }
 
 export default App
+  
