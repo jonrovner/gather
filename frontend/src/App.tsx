@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 import { Auth0Provider } from '@auth0/auth0-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import CreateEvent from './pages/CreateEvent'
 import InviteGuests from './pages/InviteGuests'
 import EventGuestView from './pages/EventGuestView'
@@ -8,6 +9,7 @@ import EventsList from './components/EventsList'
 import ManageEvent from './pages/ManageEvent'
 
 const App: React.FC = () => {
+  const { t, i18n } = useTranslation()
   const [isDark, setIsDark] = useState(() => {
     // Check if user has a saved preference
     const savedPreference = localStorage.getItem('darkMode')
@@ -30,6 +32,11 @@ const App: React.FC = () => {
     }
   }, [isDark])
 
+  const toggleLanguage = () => {
+    const newLang = i18n.language === 'en' ? 'es' : 'en'
+    i18n.changeLanguage(newLang)
+  }
+
   return (
     <Auth0Provider
       domain={import.meta.env.VITE_AUTH0_DOMAIN}
@@ -46,28 +53,38 @@ const App: React.FC = () => {
                 to="/" 
                 className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
               >
-                Home
+                {t('common.home')}
               </Link>
               <Link 
                 to="/create-event" 
                 className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
               >
-                Create Event
+                {t('common.createEvent')}
               </Link>
-              <button
-                onClick={() => setIsDark(!isDark)}
-                className="ml-auto px-3 py-1 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-              >
-                {isDark ? '🌞 Light' : '🌙 Dark'}
-              </button>
+              <div className="ml-auto flex gap-2">
+                <button
+                  onClick={toggleLanguage}
+                  className="px-3 py-1 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                >
+                  {i18n.language === 'en' ? '🇺🇸 EN' : '🇪🇸 ES'}
+                </button>
+                <button
+                  onClick={() => setIsDark(!isDark)}
+                  className="px-3 py-1 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+                >
+                  {isDark ? `🌞 ${t('common.light')}` : `🌙 ${t('common.dark')}`}
+                </button>
+              </div>
             </nav>
             
             <Routes>
               <Route path="/" element={
                 <div>
-                  <h1 className="text-4xl font-bold mb-8 text-gray-900 dark:text-white">Welcome to Gather</h1>
+                  <h1 className="text-4xl font-bold mb-8 text-gray-900 dark:text-white">
+                    {t('common.welcome')}
+                  </h1>
                   <p className="text-gray-700 dark:text-gray-300 mb-8">
-                    Create and manage your events with ease
+                    {t('common.welcomeSubtitle')}
                   </p>
                   <EventsList />
                 </div>
@@ -75,7 +92,7 @@ const App: React.FC = () => {
               <Route path="/create-event" element={<CreateEvent />} />
               <Route path="/events/:id/invite" element={<InviteGuests />} />
               <Route path="/events/:id/manage" element={<ManageEvent />} />
-              <Route path="/event/:token" element={<EventGuestView />} />
+              <Route path="/event/guest/:token" element={<EventGuestView />} />
             </Routes>
           </div>
         </div>

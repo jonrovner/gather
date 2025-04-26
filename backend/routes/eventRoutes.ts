@@ -3,8 +3,28 @@ import { Router, Request, Response } from 'express';
 import { EventModel } from '../models/event.model';
 import { v4 as uuidv4 } from 'uuid';
 import mongoose from 'mongoose';
+import nodemailer from 'nodemailer';
+import dotenv from 'dotenv';
+dotenv.config();
+
+interface INeed {
+  _id: string;
+  item: string;
+  estimatedCost?: number;
+  claimedBy?: string;
+  status: 'open' | 'claimed';
+}
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER, // Your email address
+    pass: process.env.EMAIL_PASS, // Your email password or app password
+  },
+});
 
 const router = Router();
+
 
 // Create Event
 router.post('/', async (req: Request, res: Response) => {
@@ -27,7 +47,7 @@ router.post('/', async (req: Request, res: Response) => {
       date,
       location,
       creator,
-      needs,
+      needs: needs.map((need: Omit<INeed, '_id'>) => ({ ...need, _id: uuidv4() })),
       invitees,
       reminderMethod,
       token,
@@ -81,6 +101,23 @@ router.get<{ id: string }>('/:id', async (req: Request<{ id: string }>, res: Res
   }
 });
 
+// Get Event by Token
+router.get('/token/:token', async (req: Request<{ token: string }>, res: Response) => {
+  try {
+    const event = await EventModel.findOne({ token: req.params.token });
+
+    if (!event) {
+      res.status(404).json({ message: 'Event not found' });
+      return;
+    }
+
+    res.json(event);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to fetch event by token' });
+  }
+});
+
 // Send Event Invitations
 router.post<{ id: string }>('/:id/invite', async (req: Request<{ id: string }>, res: Response) => {
   try {
@@ -90,17 +127,6 @@ router.post<{ id: string }>('/:id/invite', async (req: Request<{ id: string }>, 
     if (!Array.isArray(invitees)) {
       res.status(400).json({ message: 'Invitees must be an array' });
       return;
-    }
-
-    for (const invitee of invitees) {
-      if (!invitee.emailOrPhone) {
-        res.status(400).json({ message: 'Each invitee must have an email or phone number' });
-        return;
-      }
-      if (invitee.reminderPreference && !['email', 'sms'].includes(invitee.reminderPreference)) {
-        res.status(400).json({ message: 'Reminder preference must be either "email" or "sms"' });
-        return;
-      }
     }
 
     const event = await EventModel.findById(req.params.id);
@@ -115,6 +141,31 @@ router.post<{ id: string }>('/:id/invite', async (req: Request<{ id: string }>, 
     await event.save();
 
     // TODO: Implement actual email/SMS sending logic here
+
+    for (const invitee of invitees) {
+      if (invitee.emailOrPhone && invitee.reminderPreference === 'email') {
+
+
+        const invitationUrl = `${process.env.CORS_ORIGIN}/event/guest/${event.token}`;
+
+
+        const mailOptions = {
+          from: process.env.EMAIL_USER,
+          to: invitee.emailOrPhone,
+          subject: `You're invited to ${event.name}!`,
+          text: `Hi! You've been invited to ${event.name} on ${event.date} at ${event.location}.
+          To view the event and claim needs, click this link: ${invitationUrl}`,
+        };
+ 
+        try {
+          await transporter.sendMail(mailOptions);
+        } catch (emailErr) {
+          console.error(`Failed to send email to ${invitee.emailOrPhone}:`, emailErr);
+          // Optionally, handle this error (e.g., continue, or return an error response)
+        }
+      }
+    }
+
     // For now, we'll just return success
     res.status(200).json({ message: 'Invitations sent successfully' });
   } catch (err) {
@@ -161,6 +212,78 @@ router.put<{ id: string }>('/:id', async (req: Request<{ id: string }>, res: Res
     }
     console.error(err);
     res.status(500).json({ message: 'Failed to update event' });
+  }
+});
+
+// Claim a Need
+router.put<{ id: string; needId: string }>('/:id/needs/:needId/claim', async (req: Request<{ id: string; needId: string }>, res: Response) => {
+  try {
+    const { id, needId } = req.params;
+    const { claimedBy } = req.body; // Optional: who is claiming the need
+
+    const event = await EventModel.findById(id);
+    if (!event) {
+      res.status(404).json({ message: 'Event not found' });
+      return;
+    }
+
+    const need = event.needs.find(n => n._id.toString() === needId);
+    if (!need) {
+      res.status(404).json({ message: 'Need not found' });
+      return;
+    }
+
+    // Update the need (e.g., mark as claimed)
+    need.status = 'claimed';
+    if (claimedBy) {
+      need.claimedBy = claimedBy;
+    }
+
+    await event.save();
+    res.status(200).json(need);
+  } catch (err) {
+    if (err instanceof mongoose.Error.CastError) {
+      res.status(400).json({ message: 'Invalid event or need ID' });
+      return;
+    }
+    console.error(err);
+    res.status(500).json({ message: 'Failed to claim need' });
+  }
+});
+
+// Claim a Need by Token
+router.put<{ token: string; needId: string }>('/token/:token/needs/:needId/claim', async (req: Request<{ token: string; needId: string }>, res: Response) => {
+  try {
+    const { token, needId } = req.params;
+    const { claimedBy } = req.body;
+
+    const event = await EventModel.findOne({ token });
+    if (!event) {
+      res.status(404).json({ message: 'Event not found' });
+      return;
+    }
+
+    const need = event.needs.find(n => n._id.toString() === needId);
+    if (!need) {
+      res.status(404).json({ message: 'Need not found' });
+      return;
+    }
+
+    // Update the need
+    need.status = 'claimed';
+    if (claimedBy) {
+      need.claimedBy = claimedBy;
+    }
+
+    await event.save();
+    res.status(200).json(need);
+  } catch (err) {
+    if (err instanceof mongoose.Error.CastError) {
+      res.status(400).json({ message: 'Invalid event token or need ID' });
+      return;
+    }
+    console.error(err);
+    res.status(500).json({ message: 'Failed to claim need' });
   }
 });
 

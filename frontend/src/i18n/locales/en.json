@@ -1,0 +1,40 @@
+{
+  "common": {
+    "home": "Home",
+    "createEvent": "Create Event",
+    "welcome": "Welcome to Gather",
+    "welcomeSubtitle": "Create and manage your events with ease",
+    "light": "Light",
+    "dark": "Dark",
+    "loading": "Loading...",
+    "add": "Add"
+  },
+  "event": {
+    "name": "Event Name",
+    "description": "Description",
+    "date": "Date",
+    "location": "Location",
+    "needs": "Things You Need",
+    "invitees": "Invitados",
+    "create": "Create Event",
+    "manage": "Manage Event",
+    "invite": "Invite Guests",
+    "loading": "Loading events...",
+    "error": {
+      "loading": "Failed to load events",
+      "create": "Failed to create event"
+    },
+    "loginRequired": "Please log in to view your events",
+    "noEvents": "No upcoming events",
+    "createFirst": "Create Your First Event",
+    "itemsNeeded": "{{count}} items needed",
+    "needPlaceholder": "e.g. Burgers",
+    "cost": "Cost"
+  },
+  "guest": {
+    "view": "Guest View",
+    "accept": "Accept",
+    "decline": "Decline",
+    "bring": "I'll bring"
+  }
+} 

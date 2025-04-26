@@ -1,0 +1,40 @@
+{
+  "common": {
+    "home": "Inicio",
+    "createEvent": "Crear Evento",
+    "welcome": "Bienvenido a Gather",
+    "welcomeSubtitle": "Crea y gestiona tus eventos con facilidad",
+    "light": "Claro",
+    "dark": "Oscuro",
+    "loading": "Cargando...",
+    "add": "Añadir"
+  },
+  "event": {
+    "name": "Nombre del Evento",
+    "description": "Descripción",
+    "date": "Fecha",
+    "location": "Ubicación",
+    "needs": "Cosas que Necesitas",
+    "invitees": "Invitados",
+    "create": "Crear Evento",
+    "manage": "Gestionar Evento",
+    "invite": "Invitar Invitados",
+    "loading": "Cargando eventos...",
+    "error": {
+      "loading": "Error al cargar los eventos",
+      "create": "Error al crear el evento"
+    },
+    "loginRequired": "Por favor, inicia sesión para ver tus eventos",
+    "noEvents": "No hay eventos próximos",
+    "createFirst": "Crea tu primer evento",
+    "itemsNeeded": "{{count}} elementos necesarios",
+    "needPlaceholder": "ej. Hamburguesas",
+    "cost": "Costo"
+  },
+  "guest": {
+    "view": "Vista de Invitado",
+    "accept": "Aceptar",
+    "decline": "Declinar",
+    "bring": "Llevaré"
+  }
+} 

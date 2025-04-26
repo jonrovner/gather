@@ -1,54 +1,59 @@
-# React + TypeScript + Vite
+# Gather - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Gather is a web application designed to help families and groups easily organize events, split costs, and assign responsibilities.  
+This frontend is built with **React**, **TypeScript**, **Vite**, and **TailwindCSS**, and integrates **Auth0** for authentication.
 
-Currently, two official plugins are available:
+## Live Demo
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+👉 [https://gather-beryl.vercel.app/](https://gather-beryl.vercel.app/)
 
-## Expanding the ESLint configuration
+## Features
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Create new events with name, description, location, and date
+- Assign items ("needs") to the event (e.g., food, drinks, supplies)
+- Invite peoploe
+- Accept invitation
+- Claim needs
+- Assign cost to claimed needs
+- Split estimated costs among participants
+- Auth0-based login and secure session management
+- Dark mode support
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## Tech Stack
+
+- [React](https://reactjs.org/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Vite](https://vitejs.dev/)
+- [TailwindCSS](https://tailwindcss.com/)
+- [Auth0 React SDK](https://auth0.com/docs/libraries/auth0-react)
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18+ recommended)
+- A configured Auth0 Application (SPA type)
+- Access to the Gather backend API
+
+### Installation
+
+```bash
+git clone https://github.com/yourusername/gather-frontend.git
+cd gather-frontend
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+- Create a .env file with:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+VITE_API_URL=https://gather-plop.onrender.com
+VITE_AUTH0_DOMAIN=your-auth0-domain
+VITE_AUTH0_CLIENT_ID=your-auth0-client-id
+VITE_AUTH0_AUDIENCE=your-auth0-audience
+```
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+### Running the app locally
+
+```bash
+npm run build
 ```

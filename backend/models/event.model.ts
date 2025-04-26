@@ -2,6 +2,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface INeed {
+  _id: string;
   item: string;
   claimedBy?: string; // userId or name
   estimatedCost?: number;
@@ -30,6 +31,7 @@ export interface IEvent extends Document {
 }
 
 const NeedSchema = new Schema<INeed>({
+  _id: { type: String, required: true },
   item: { type: String, required: true },
   claimedBy: String,
   estimatedCost: Number,

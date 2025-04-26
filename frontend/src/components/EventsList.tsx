@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth0 } from '@auth0/auth0-react';
+import { useTranslation } from 'react-i18next';
 const API_URL = import.meta.env.VITE_API_URL;
 
 interface IEvent {
@@ -17,6 +18,7 @@ interface IEvent {
 }
 
 const EventsList: React.FC = () => {
+  const { t } = useTranslation();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth0();
   const [events, setEvents] = useState<IEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,29 +44,29 @@ const EventsList: React.FC = () => {
         setEvents(sortedEvents);
       } catch (err) {
         console.error('Error fetching events:', err);
-        setError('Failed to load events');
+        setError(t('event.error.loading'));
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchEvents();
-  }, [isAuthenticated, user?.sub]);
+  }, [isAuthenticated, user?.sub, t]);
 
   if (isAuthLoading) {
-    return <div className="text-center p-4">Loading...</div>;
+    return <div className="text-center p-4">{t('common.loading')}</div>;
   }
 
   if (!isAuthenticated) {
     return (
       <div className="text-center p-4">
-        <p className="text-gray-600 dark:text-gray-400">Please log in to view your events</p>
+        <p className="text-gray-600 dark:text-gray-400">{t('event.loginRequired')}</p>
       </div>
     );
   }
 
   if (isLoading) {
-    return <div className="text-center p-4">Loading events...</div>;
+    return <div className="text-center p-4">{t('event.loading')}</div>;
   }
 
   if (error) {
@@ -74,12 +76,12 @@ const EventsList: React.FC = () => {
   if (events.length === 0) {
     return (
       <div className="text-center p-4">
-        <p className="text-gray-600 dark:text-gray-400">No upcoming events</p>
+        <p className="text-gray-600 dark:text-gray-400">{t('event.noEvents')}</p>
         <Link 
           to="/create-event" 
           className="mt-4 inline-block px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
         >
-          Create Your First Event
+          {t('event.createFirst')}
         </Link>
       </div>
     );
@@ -111,13 +113,13 @@ const EventsList: React.FC = () => {
             </div>
             <div className="text-right">
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                {event.needs.filter(need => need.status === 'open').length} items needed
+                {t('event.itemsNeeded', { count: event.needs.filter(need => need.status === 'open').length })}
               </p>
               <Link
                 to={`/events/${event._id}/manage`}
                 className="mt-2 inline-block px-3 py-1 text-sm bg-primary-600 text-white rounded hover:bg-primary-700"
               >
-                Manage
+                {t('event.manage')}
               </Link>
             </div>
           </div>

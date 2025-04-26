@@ -13,11 +13,13 @@ interface INeed {
 
 interface IEvent {
   _id: string;
+  id: string;
   name: string;
   description?: string;
   date: string;
   location: string;
   needs: INeed[];
+  token: string;
 }
 
 const EventGuestView: React.FC = () => {
@@ -45,14 +47,24 @@ const EventGuestView: React.FC = () => {
     }
   }, [token]);
 
+
+  useEffect(() => {
+    console.log('event', event);
+  }, [event]);
+
   const handleClaimItem = async (needId: string) => {
     if (!claimingName.trim()) {
       alert('Please enter your name to claim an item');
       return;
     }
 
+    if (!event?._id) {
+      alert('Event ID is missing');
+      return;
+    }
+
     try {
-      await axios.post(`${API_URL}/api/events/${event?._id}/needs/${needId}/claim`, {
+      await axios.put(`${API_URL}/api/events/${event._id}/needs/${needId}/claim`, {
         claimedBy: claimingName
       });
       

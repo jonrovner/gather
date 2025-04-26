@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 const API_URL = import.meta.env.VITE_API_URL;
 
 interface INeed {
@@ -10,6 +11,7 @@ interface INeed {
 }
 
 const CreateEvent: React.FC = () => {
+  const { t } = useTranslation();
   const { user, isAuthenticated, isLoading, loginWithRedirect } = useAuth0();
   const navigate = useNavigate();
 
@@ -22,12 +24,12 @@ const CreateEvent: React.FC = () => {
 
   // Show loading state while checking authentication
   if (isLoading) {
-    return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+    return <div className="flex justify-center items-center min-h-screen">{t('common.loading')}</div>;
   }
 
   // Show message if not authenticated
   if (!isAuthenticated) {
-    return <div className="flex justify-center items-center min-h-screen">Please log in to create an event.</div>;
+    return <div className="flex justify-center items-center min-h-screen">{t('event.loginRequired')}</div>;
   }
 
   const [name, setName] = useState('');
@@ -75,28 +77,28 @@ const CreateEvent: React.FC = () => {
         console.log('✅ Event created:', response.data);
         navigate(`/events/${response.data._id}/invite`);
       } else {
-        alert('Failed to create event.');
+        alert(t('event.error.create'));
       }
     } catch (error) {
       console.error('❌ Error creating event:', error);
-      alert('Failed to create event.');
+      alert(t('event.error.create'));
     }
   };
 
   return (
     <div className="max-w-xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
-      <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Create New Event</h2>
+      <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">{t('event.create')}</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input 
           className="input dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
-          placeholder="Event Name" 
+          placeholder={t('event.name')} 
           value={name} 
           onChange={(e) => setName(e.target.value)} 
           required 
         />
         <textarea 
           className="input dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
-          placeholder="Description" 
+          placeholder={t('event.description')} 
           value={description} 
           onChange={(e) => setDescription(e.target.value)} 
         />
@@ -109,25 +111,25 @@ const CreateEvent: React.FC = () => {
         />
         <input 
           className="input dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
-          placeholder="Location" 
+          placeholder={t('event.location')} 
           value={location} 
           onChange={(e) => setLocation(e.target.value)} 
           required 
         />
 
         <div>
-          <label className="block mb-1 text-gray-700 dark:text-gray-300">Things You Need</label>
+          <label className="block mb-1 text-gray-700 dark:text-gray-300">{t('event.needs')}</label>
           <div className="flex gap-2 mb-2">
             <input 
               className="input flex-grow dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
-              placeholder="e.g. Burgers" 
+              placeholder={t('event.needPlaceholder')} 
               value={newNeed} 
               onChange={(e) => setNewNeed(e.target.value)} 
             />
             <input 
               className="input w-24 dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
               type="number" 
-              placeholder="Cost" 
+              placeholder={t('event.cost')} 
               value={newNeedCost} 
               onChange={(e) => setNewNeedCost(e.target.value)} 
             />
@@ -136,7 +138,7 @@ const CreateEvent: React.FC = () => {
               className="btn bg-primary-600 hover:bg-primary-700" 
               onClick={handleAddNeed}
             >
-              Add
+              {t('common.add')}
             </button>
           </div>
           <ul className="list-disc pl-5 text-gray-700 dark:text-gray-300">
@@ -152,7 +154,7 @@ const CreateEvent: React.FC = () => {
           type="submit" 
           className="btn-primary w-full bg-primary-600 hover:bg-primary-700"
         >
-          Create Event
+          {t('event.create')}
         </button>
       </form>
     </div>
