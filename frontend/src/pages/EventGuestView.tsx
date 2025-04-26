@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -23,7 +23,8 @@ interface IEvent {
 }
 
 const EventGuestView: React.FC = () => {
-  const { token } = useParams<{ token: string }>();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
   const [event, setEvent] = useState<IEvent | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [claimingName, setClaimingName] = useState('');
@@ -34,9 +35,8 @@ const EventGuestView: React.FC = () => {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-
         console.log("fetching event");
-        const response = await axios.get(`${API_URL}/api/events/token/?token=${token}`);
+        const response = await axios.get(`${API_URL}/api/events/token?token=${token}`);
         console.log("event", response.data);
         setEvent(response.data);
       } catch (error) {

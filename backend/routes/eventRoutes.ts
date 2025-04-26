@@ -146,7 +146,7 @@ router.post<{ id: string }>('/:id/invite', async (req: Request<{ id: string }>, 
       if (invitee.emailOrPhone && invitee.reminderPreference === 'email') {
 
 
-        const invitationUrl = `${process.env.CORS_ORIGIN}/event/guest/?token=${event.token}`;
+        const invitationUrl = `${process.env.CORS_ORIGIN}/event/guest?token=${encodeURIComponent(event.token)}`;
 
 
         const mailOptions = {
