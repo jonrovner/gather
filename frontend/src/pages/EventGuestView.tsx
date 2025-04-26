@@ -34,7 +34,10 @@ const EventGuestView: React.FC = () => {
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        const response = await axios.get(`${API_URL}/api/events/token/${token}`);
+
+        console.log("fetching event");
+        const response = await axios.get(`${API_URL}/api/events/token/?token=${token}`);
+        console.log("event", response.data);
         setEvent(response.data);
       } catch (error) {
         console.error('Error fetching event:', error);

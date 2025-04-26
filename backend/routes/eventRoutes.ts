@@ -102,9 +102,9 @@ router.get<{ id: string }>('/:id', async (req: Request<{ id: string }>, res: Res
 });
 
 // Get Event by Token
-router.get('/token/:token', async (req: Request<{ token: string }>, res: Response) => {
+router.get('/token', async (req: Request, res: Response) => {
   try {
-    const event = await EventModel.findOne({ token: req.params.token });
+    const event = await EventModel.findOne({ token: req.query.token });
 
     if (!event) {
       res.status(404).json({ message: 'Event not found' });
@@ -146,7 +146,7 @@ router.post<{ id: string }>('/:id/invite', async (req: Request<{ id: string }>, 
       if (invitee.emailOrPhone && invitee.reminderPreference === 'email') {
 
 
-        const invitationUrl = `${process.env.CORS_ORIGIN}/event/guest/${event.token}`;
+        const invitationUrl = `${process.env.CORS_ORIGIN}/event/guest/?token=${event.token}`;
 
 
         const mailOptions = {
