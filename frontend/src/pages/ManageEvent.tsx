@@ -29,6 +29,7 @@ interface IEvent {
   invitees: IInvitee[];
 }
 
+
 const ManageEvent: React.FC = () => {
 
   const { user, isAuthenticated, isLoading } = useAuth0();
@@ -130,6 +131,17 @@ const ManageEvent: React.FC = () => {
       alert('Failed to update event.');
     }
   };
+
+  const onDeleteEvent = async (eventId: string) => {
+    try {
+      await axios.delete(`${API_URL}/api/events/${eventId}`);
+      alert('Event deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting event:', error);
+    }
+  };  
+
+
   if (isLoading || isLoadingEvent) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
   }
@@ -264,6 +276,13 @@ const ManageEvent: React.FC = () => {
           >
             Manage Invites
           </button>
+          <button
+            type="button"
+            className="btn flex-1 bg-red-600 hover:bg-gray-700"
+            onClick={() => onDeleteEvent(id || '')}
+          >
+            Delete Event
+          </button> 
         </div>
       </form>
     </div>

@@ -25,6 +25,8 @@ interface IEvent {
   }>;
 }
 
+
+
 const EventsList: React.FC = () => {
   const { t } = useTranslation();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth0();

@@ -103,6 +103,19 @@ router.get<{ id: string }>('/:id', async (req: Request<{ id: string }>, res: Res
   }
 });
 
+// Delete Event
+router.delete<{ id: string }>('/:id', async (req: Request<{ id: string }>, res: Response) => {
+  try {
+    const { id } = req.params;
+    await EventModel.findByIdAndDelete(id); 
+    res.status(200).json({ message: 'Event deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to delete event' });
+  }
+}); 
+
+
 // Get Event by Token
 router.get('/token/:token', async (req: Request<{ token: string }>, res: Response) => {
   try {
