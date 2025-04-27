@@ -22,6 +22,7 @@ export interface IEvent extends Document {
   date: Date;
   location: string;
   creator: string; // userId
+  hostName: string; // name from Auth0 user
   needs: INeed[];
   invitees: IInvitee[];
   reminderMethod?: 'email' | 'sms' | 'both';
@@ -52,6 +53,7 @@ const EventSchema = new Schema<IEvent>(
     date: { type: Date, required: true },
     location: { type: String, required: true },
     creator: { type: String, required: true },
+    hostName: { type: String, required: true },
     needs: [NeedSchema],
     invitees: [InviteeSchema],
     reminderMethod: { type: String, enum: ['email', 'sms', 'both'] },

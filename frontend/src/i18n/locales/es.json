@@ -20,6 +20,8 @@
     "manage": "Gestionar Evento",
     "invite": "Invitar Invitados",
     "loading": "Cargando eventos...",
+    "hostedBy": "Organizado por {{host}}",
+    "myEvents": "Mis Eventos", 
     "error": {
       "loading": "Error al cargar los eventos",
       "create": "Error al crear el evento"

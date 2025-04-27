@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth0 } from '@auth0/auth0-react';
 import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -20,24 +21,43 @@ interface IEvent {
   location: string;
   needs: INeed[];
   token: string;
+  invitees: Array<{
+    emailOrPhone: string;
+    reminderPreference: 'email' | 'sms' | 'both';
+  }>;
 }
 
 const EventGuestView: React.FC = () => {
   const { token } = useParams<{ token: string }>();
+  const { user, isAuthenticated, isLoading: isAuthLoading, loginWithRedirect } = useAuth0();
+  const navigate = useNavigate();
   const [event, setEvent] = useState<IEvent | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [claimingName, setClaimingName] = useState('');
   const [selectedNeed, setSelectedNeed] = useState<string | null>(null);
-  console.log("rendering");
-  
+  const [isInvitee, setIsInvitee] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      loginWithRedirect();
+    }
+  }, [isAuthLoading, isAuthenticated, loginWithRedirect]);
 
   useEffect(() => {
     const fetchEvent = async () => {
+      if (!token || !isAuthenticated || !user?.email) return;
+
       try {
-        console.log("fetching event");
         const response = await axios.get(`${API_URL}/api/events/token/${token}`);
-        console.log("event", response.data);
-        setEvent(response.data);
+        const eventData = response.data;
+        
+        // Check if user is an invitee
+        const isUserInvitee = eventData.invitees.some(
+          (invitee: { emailOrPhone: string }) => invitee.emailOrPhone === user.email
+        );
+        
+        setIsInvitee(isUserInvitee);
+        setEvent(eventData);
       } catch (error) {
         console.error('Error fetching event:', error);
         alert('Failed to load event details.');
@@ -46,15 +66,10 @@ const EventGuestView: React.FC = () => {
       }
     };
 
-    if (token) {
+    if (token && isAuthenticated && user?.email) {
       fetchEvent();
     }
-  }, [token]);
-
-
-  useEffect(() => {
-    console.log('event', event);
-  }, [event]);
+  }, [token, isAuthenticated, user?.email]);
 
   const handleClaimItem = async (needId: string) => {
     if (!claimingName.trim()) {
@@ -90,12 +105,20 @@ const EventGuestView: React.FC = () => {
     }
   };
 
-  if (isLoading) {
+  if (isAuthLoading || isLoading) {
     return <div className="text-center p-4">Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <div className="text-center p-4">Please log in to view this event.</div>;
   }
 
   if (!event) {
     return <div className="text-center p-4">Event not found</div>;
+  }
+
+  if (!isInvitee) {
+    return <div className="text-center p-4">You are not invited to this event.</div>;
   }
 
   return (

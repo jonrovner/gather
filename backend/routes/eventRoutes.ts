@@ -35,6 +35,7 @@ router.post('/', async (req: Request, res: Response) => {
       date,
       location,
       creator,
+      hostName,
       needs,
       invitees,
       reminderMethod,
@@ -47,6 +48,7 @@ router.post('/', async (req: Request, res: Response) => {
       date,
       location,
       creator,
+      hostName,
       needs: needs.map((need: Omit<INeed, '_id'>) => ({ ...need, _id: uuidv4() })),
       invitees,
       reminderMethod,
@@ -104,8 +106,9 @@ router.get<{ id: string }>('/:id', async (req: Request<{ id: string }>, res: Res
 // Get Event by Token
 router.get('/token/:token', async (req: Request<{ token: string }>, res: Response) => {
   try {
-    const event = await EventModel.findOne({ token: req.params.token });
-    console.log("event", event);
+    const event = await EventModel.findOne({ token: req.params.token })
+      .select('name description date location needs token invitees');
+      
     if (!event) {
       res.status(404).json({ message: 'Event not found' });
       return;
@@ -155,7 +158,7 @@ router.post<{ id: string }>('/:id/invite', async (req: Request<{ id: string }>, 
           from: process.env.EMAIL_USER,
           to: invitee.emailOrPhone,
           subject: `You're invited to ${event.name}!`,
-          text: `Hi! You've been invited to ${event.name} on ${event.date} at ${event.location}.
+          text: `Hi! ${event.hostName} has invited you to ${event.name} on ${event.date} at ${event.location}.
           To view the event and claim needs, click this link: ${invitationUrl}`,
         };
  

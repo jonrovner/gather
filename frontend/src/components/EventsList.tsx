@@ -15,12 +15,21 @@ interface IEvent {
     item: string;
     status: 'open' | 'claimed';
   }>;
+  creator: string;
+  hostName: string;
+  invitees: Array<{
+    name: string;
+    emailOrPhone: string;
+    hasAccepted?: boolean;
+    reminderPreference?: 'email' | 'sms';
+  }>;
 }
 
 const EventsList: React.FC = () => {
   const { t } = useTranslation();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth0();
-  const [events, setEvents] = useState<IEvent[]>([]);
+  const [createdEvents, setCreatedEvents] = useState<IEvent[]>([]);
+  const [invitedEvents, setInvitedEvents] = useState<IEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,16 +41,26 @@ const EventsList: React.FC = () => {
       }
 
       try {
-        const response = await axios.get(`${API_URL}/api/events`, {
+        // Fetch created events
+        const createdResponse = await axios.get(`${API_URL}/api/events`, {
           params: {
             creator: user.sub
           }
         });
-        // Sort events by date
-        const sortedEvents = response.data.sort((a: IEvent, b: IEvent) => 
-          new Date(a.date).getTime() - new Date(b.date).getTime()
+
+        // Fetch all events and filter for invited ones
+        const allEventsResponse = await axios.get(`${API_URL}/api/events`);
+        const invitedEvents = allEventsResponse.data.filter((event: IEvent) => 
+          event.creator !== user.sub && 
+          event.invitees.some((invitee: { emailOrPhone: string }) => invitee.emailOrPhone === user.email)
         );
-        setEvents(sortedEvents);
+
+        // Sort events by date
+        const sortByDate = (a: IEvent, b: IEvent) => 
+          new Date(a.date).getTime() - new Date(b.date).getTime();
+
+        setCreatedEvents(createdResponse.data.sort(sortByDate));
+        setInvitedEvents(invitedEvents.sort(sortByDate));
       } catch (err) {
         console.error('Error fetching events:', err);
         setError(t('event.error.loading'));
@@ -51,7 +70,7 @@ const EventsList: React.FC = () => {
     };
 
     fetchEvents();
-  }, [isAuthenticated, user?.sub, t]);
+  }, [isAuthenticated, user?.sub, user?.email, t]);
 
   if (isAuthLoading) {
     return <div className="text-center p-4">{t('common.loading')}</div>;
@@ -73,7 +92,47 @@ const EventsList: React.FC = () => {
     return <div className="text-center p-4 text-red-600">{error}</div>;
   }
 
-  if (events.length === 0) {
+  const renderEventCard = (event: IEvent) => (
+    <div 
+      key={event._id}
+      className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow"
+    >
+      <div className="flex justify-between items-start">
+        <div>
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+            {event.name}
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400">
+            {new Date(event.date).toLocaleString()}
+          </p>
+          <p className="text-gray-600 dark:text-gray-400">
+            {event.location}
+          </p>
+          {event.description && (
+            <p className="mt-2 text-gray-700 dark:text-gray-300">
+              {event.description}
+            </p>
+          )}
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {t('event.hostedBy', { host: event.hostName })}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            {t('event.itemsNeeded', { count: event.needs.filter(need => need.status === 'open').length })}
+          </p>
+          <Link
+            to={`/events/${event._id}/manage`}
+            className="mt-2 inline-block px-3 py-1 text-sm bg-primary-600 text-white rounded hover:bg-primary-700"
+          >
+            {t('event.manage')}
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (createdEvents.length === 0 && invitedEvents.length === 0) {
     return (
       <div className="text-center p-4">
         <p className="text-gray-600 dark:text-gray-400">{t('event.noEvents')}</p>
@@ -88,43 +147,28 @@ const EventsList: React.FC = () => {
   }
 
   return (
-    <div className="grid gap-4">
-      {events.map((event) => (
-        <div 
-          key={event._id}
-          className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow"
-        >
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {event.name}
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                {new Date(event.date).toLocaleString()}
-              </p>
-              <p className="text-gray-600 dark:text-gray-400">
-                {event.location}
-              </p>
-              {event.description && (
-                <p className="mt-2 text-gray-700 dark:text-gray-300">
-                  {event.description}
-                </p>
-              )}
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {t('event.itemsNeeded', { count: event.needs.filter(need => need.status === 'open').length })}
-              </p>
-              <Link
-                to={`/events/${event._id}/manage`}
-                className="mt-2 inline-block px-3 py-1 text-sm bg-primary-600 text-white rounded hover:bg-primary-700"
-              >
-                {t('event.manage')}
-              </Link>
-            </div>
+    <div className="space-y-8">
+      {createdEvents.length > 0 && (
+        <div>
+          <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+            {t('event.myEvents')}
+          </h2>
+          <div className="grid gap-4">
+            {createdEvents.map(renderEventCard)}
           </div>
         </div>
-      ))}
+      )}
+
+      {invitedEvents.length > 0 && (
+        <div>
+          <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+            {t('event.invitedEvents')}
+          </h2>
+          <div className="grid gap-4">
+            {invitedEvents.map(renderEventCard)}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

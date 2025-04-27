@@ -28,8 +28,16 @@ app.get('/', (req: Request, res: Response) => {
 // MongoDB Connection
 mongoose
   .connect(process.env.MONGO_URI as string)
-  .then(() => {
+  .then(async () => {
     console.log('✅ Connected to MongoDB');
+    
+    // Clean only the events collection
+    if (mongoose.connection.db) {
+      const eventsCollection = mongoose.connection.db.collection('events');
+      await eventsCollection.deleteMany({});
+      console.log('🧹 Events collection cleaned on server restart');
+    }
+    
     app.listen(PORT, () =>
       console.log(`🌐 Server running at http://localhost:${PORT}`)
     );

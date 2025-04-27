@@ -10,6 +10,7 @@ import ManageEvent from './pages/ManageEvent'
 
 const App: React.FC = () => {
   const { t, i18n } = useTranslation()
+  
   const [isDark, setIsDark] = useState(() => {
     // Check if user has a saved preference
     const savedPreference = localStorage.getItem('darkMode')

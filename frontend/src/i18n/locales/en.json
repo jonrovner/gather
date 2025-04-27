@@ -20,6 +20,8 @@
     "manage": "Manage Event",
     "invite": "Invite Guests",
     "loading": "Loading events...",
+    "hostedBy": "Hosted by {{host}}",
+    "myEvents": "My Events",
     "error": {
       "loading": "Failed to load events",
       "create": "Failed to create event"

@@ -64,6 +64,7 @@ const CreateEvent: React.FC = () => {
         date: new Date(date),
         location,
         creator: user.sub,
+        hostName: user.name || user.email?.split('@')[0] || 'Anonymous',
         needs: needs.map(need => ({
           item: need.item,
           estimatedCost: need.estimatedCost,
@@ -71,7 +72,7 @@ const CreateEvent: React.FC = () => {
         })),
         token: crypto.randomUUID()
       };
-
+      console.log('Payload:', payload);
       const response = await axios.post(`${API_URL}/api/events`, payload);
       if (response.status === 201) {
         console.log('✅ Event created:', response.data);
