@@ -102,10 +102,10 @@ router.get<{ id: string }>('/:id', async (req: Request<{ id: string }>, res: Res
 });
 
 // Get Event by Token
-router.get('/token', async (req: Request, res: Response) => {
+router.get('/token/:token', async (req: Request<{ token: string }>, res: Response) => {
   try {
-    const event = await EventModel.findOne({ token: req.query.token });
-
+    const event = await EventModel.findOne({ token: req.params.token });
+    console.log("event", event);
     if (!event) {
       res.status(404).json({ message: 'Event not found' });
       return;
@@ -140,13 +140,15 @@ router.post<{ id: string }>('/:id/invite', async (req: Request<{ id: string }>, 
     event.invitees = [...event.invitees, ...invitees];
     await event.save();
 
-    // TODO: Implement actual email/SMS sending logic here
+    // TODO: Implement actual email/SMS sending logic here    
+    const {token} = event;
+    const encodedToken = encodeURIComponent(token);
 
     for (const invitee of invitees) {
       if (invitee.emailOrPhone && invitee.reminderPreference === 'email') {
 
 
-        const invitationUrl = `${process.env.CORS_ORIGIN}/event/guest?token=${encodeURIComponent(event.token)}`;
+        const invitationUrl = `${process.env.CORS_ORIGIN}/event/guest/${encodedToken}`;
 
 
         const mailOptions = {
