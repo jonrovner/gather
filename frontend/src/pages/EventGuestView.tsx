@@ -30,7 +30,7 @@ interface IEvent {
 const EventGuestView: React.FC = () => {
   const { token } = useParams<{ token: string }>();
   const { user, isAuthenticated, isLoading: isAuthLoading, loginWithRedirect } = useAuth0();
-  const navigate = useNavigate();
+
   const [event, setEvent] = useState<IEvent | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [claimingName, setClaimingName] = useState('');
