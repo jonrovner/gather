@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
 import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL;
@@ -49,7 +49,7 @@ const EventGuestView: React.FC = () => {
 
       try {
         const response = await axios.get(`${API_URL}/api/events/token/${token}`);
-        const eventData = response.data;
+        const eventData = response.data;  
         
         // Check if user is an invitee
         const isUserInvitee = eventData.invitees.some(
