@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
-import { Auth0Provider } from '@auth0/auth0-react'
+import { Auth0Provider, useAuth0 } from '@auth0/auth0-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import CreateEvent from './pages/CreateEvent'
@@ -8,35 +8,81 @@ import EventGuestView from './pages/EventGuestView'
 import EventsList from './components/EventsList'
 import ManageEvent from './pages/ManageEvent'
 
-const App: React.FC = () => {
+const Navbar: React.FC = () => {
   const { t, i18n } = useTranslation()
+  const { isAuthenticated, loginWithRedirect, logout } = useAuth0()
   
-  const [isDark, setIsDark] = useState(() => {
-    // Check if user has a saved preference
-    const savedPreference = localStorage.getItem('darkMode')
-    if (savedPreference !== null) {
-      return savedPreference === 'true'
-    }
-    // If no saved preference, check system preference
-    return window.matchMedia('(prefers-color-scheme: dark)').matches
-  })
+  const onLogout = () => {
+    logout({
+      logoutParams: {
+        returnTo: window.location.origin
+      }
+    })
+  }
+
+  return (
+    <nav className="mb-8 flex gap-4 items-center">
+      <Link 
+        to="/" 
+        className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+      >
+        {t('common.home')}
+      </Link>
+      <Link 
+        to="/create-event" 
+        className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+      >
+        {t('common.createEvent')}
+      </Link>
+      <div className="ml-auto flex gap-2">
+        <button
+          onClick={() => {
+            const newLang = i18n.language === 'en' ? 'es' : 'en'
+            i18n.changeLanguage(newLang)
+          }}
+          className="px-3 py-1 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+        >
+          {i18n.language === 'en' ? '🇺🇸 EN' : '🇪🇸 ES'}
+        </button>
+        <button
+          onClick={() => {
+            const isDark = document.documentElement.classList.contains('dark')
+            document.documentElement.classList.toggle('dark')
+            localStorage.setItem('darkMode', (!isDark).toString())
+          }}
+          className="px-3 py-1 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+        >
+          {document.documentElement.classList.contains('dark') ? `🌙 ${t('common.dark')}` : `🌞 ${t('common.light')}`}
+        </button>
+        {isAuthenticated ? (
+          <button 
+          className="px-3 py-1 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+          onClick={onLogout}>Logout</button>
+        ) : (
+          <button 
+           className="px-3 py-1 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+          onClick={() => loginWithRedirect()}>Login</button>
+        )}
+      </div>
+    </nav>
+  )
+}
+
+const App: React.FC = () => {
+  const { t } = useTranslation()
 
   useEffect(() => {
-    // Update localStorage when dark mode changes
-    localStorage.setItem('darkMode', isDark.toString())
-    
-    // Add or remove dark class from html element
-    if (isDark) {
+    const savedPreference = localStorage.getItem('darkMode')
+    if (savedPreference !== null) {
+      if (savedPreference === 'true') {
+        document.documentElement.classList.add('dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+      }
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
       document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
     }
-  }, [isDark])
-
-  const toggleLanguage = () => {
-    const newLang = i18n.language === 'en' ? 'es' : 'en'
-    i18n.changeLanguage(newLang)
-  }
+  }, [])
 
   return (
     <Auth0Provider
@@ -49,34 +95,7 @@ const App: React.FC = () => {
       <Router>
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
           <div className="container mx-auto p-4">
-            <nav className="mb-8 flex gap-4 items-center">
-              <Link 
-                to="/" 
-                className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
-              >
-                {t('common.home')}
-              </Link>
-              <Link 
-                to="/create-event" 
-                className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
-              >
-                {t('common.createEvent')}
-              </Link>
-              <div className="ml-auto flex gap-2">
-                <button
-                  onClick={toggleLanguage}
-                  className="px-3 py-1 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                >
-                  {i18n.language === 'en' ? '🇺🇸 EN' : '🇪🇸 ES'}
-                </button>
-                <button
-                  onClick={() => setIsDark(!isDark)}
-                  className="px-3 py-1 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-                >
-                  {isDark ? `🌙 ${t('common.dark')}` : `🌞 ${t('common.light')}`}
-                </button>
-              </div>
-            </nav>
+            <Navbar />
             
             <Routes>
               <Route path="/" element={
