@@ -6,6 +6,7 @@ export interface INeed {
   item: string;
   claimedBy?: string; // userId or name
   estimatedCost?: number;
+  actualCost?: number;
   status?: 'open' | 'claimed';
 }
 
@@ -36,6 +37,7 @@ const NeedSchema = new Schema<INeed>({
   item: { type: String, required: true },
   claimedBy: String,
   estimatedCost: Number,
+  actualCost: Number,
   status: { type: String, enum: ['open', 'claimed'], default: 'open' },
 });
 

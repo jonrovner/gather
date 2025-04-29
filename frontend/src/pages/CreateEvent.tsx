@@ -6,8 +6,11 @@ import { useTranslation } from 'react-i18next';
 const API_URL = import.meta.env.VITE_API_URL;
 
 interface INeed {
+  _id: string;
   item: string;
+  claimedBy?: string;
   estimatedCost?: number;
+  status: 'open' | 'claimed';
 }
 
 const CreateEvent: React.FC = () => {
@@ -45,8 +48,10 @@ const CreateEvent: React.FC = () => {
   const handleAddNeed = () => {
     if (newNeed.trim() !== '') {
       setNeeds([...needs, {
+        _id: crypto.randomUUID(),
         item: newNeed,
-        estimatedCost: newNeedCost ? parseFloat(newNeedCost) : undefined
+        estimatedCost: newNeedCost ? parseFloat(newNeedCost) : undefined,
+        status: 'open'
       }]);
       setNewNeed('');
       setNewNeedCost('');
@@ -66,9 +71,10 @@ const CreateEvent: React.FC = () => {
         creator: user.sub,
         hostName: user.name || user.email?.split('@')[0] || 'Anonymous',
         needs: needs.map(need => ({
+          _id: need._id,
           item: need.item,
           estimatedCost: need.estimatedCost,
-          status: 'open'
+          status: need.status
         })),
         token: crypto.randomUUID()
       };

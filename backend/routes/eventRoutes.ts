@@ -11,6 +11,7 @@ interface INeed {
   _id: string;
   item: string;
   estimatedCost?: number;
+  actualCost?: number;
   claimedBy?: string;
   status: 'open' | 'claimed';
 }
@@ -195,6 +196,33 @@ router.post<{ id: string }>('/:id/invite', async (req: Request<{ id: string }>, 
     res.status(500).json({ message: 'Failed to send invitations' });
   }
 });
+// Accept Invitation
+router.put<{ id: string; emailOrPhone: string }>('/:id/accept', async (req: Request<{ id: string; emailOrPhone: string }>, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { emailOrPhone, hasAccepted } = req.body;
+
+    const event = await EventModel.findById(id);
+    if (!event) {
+      res.status(404).json({ message: 'Event not found' });
+      return;
+    }
+
+    const invitee = event.invitees.find(i => i.emailOrPhone === emailOrPhone);  
+    if (!invitee) {
+      res.status(404).json({ message: 'Invitee not found' });
+      return;
+    }
+
+    invitee.hasAccepted = hasAccepted;
+    await event.save();
+
+    res.status(200).json({ message: 'Invitation accepted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to accept invitation' });
+  } 
+}); 
 
 // Update Event
 router.put<{ id: string }>('/:id', async (req: Request<{ id: string }>, res: Response) => {
@@ -302,6 +330,33 @@ router.put<{ token: string; needId: string }>('/token/:token/needs/:needId/claim
     }
     console.error(err);
     res.status(500).json({ message: 'Failed to claim need' });
+  }
+});
+
+// Update Cost
+router.put<{ id: string; needId: string; actualCost: number }>('/:id/needs/:needId/cost', async (req: Request<{ id: string; needId: string; actualCost: number }>, res: Response) => {
+  try {
+    const { id, needId } = req.params;
+    const { actualCost } = req.body;  
+
+    const event = await EventModel.findById(id);
+    if (!event) {
+      res.status(404).json({ message: 'Event not found' });
+      return;
+    } 
+
+    const need = event.needs.find(n => n._id.toString() === needId);
+    if (!need) {
+      res.status(404).json({ message: 'Need not found' });
+      return;
+    } 
+
+    need.actualCost = actualCost;
+    await event.save();
+    res.status(200).json(need);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to update cost' });
   }
 });
 

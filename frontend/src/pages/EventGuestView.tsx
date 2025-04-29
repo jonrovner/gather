@@ -8,8 +8,16 @@ interface INeed {
   _id: string;
   item: string;
   estimatedCost?: number;
+  actualCost?: number;
   claimedBy?: string;
   status: 'open' | 'claimed';
+}
+
+interface IInvitee {
+  name: string;
+  emailOrPhone: string;
+  hasAccepted?: boolean;
+  reminderPreference?: 'email' | 'sms';
 }
 
 interface IEvent {
@@ -21,10 +29,7 @@ interface IEvent {
   location: string;
   needs: INeed[];
   token: string;
-  invitees: Array<{
-    emailOrPhone: string;
-    reminderPreference: 'email' | 'sms' | 'both';
-  }>;
+  invitees: IInvitee[];
 }
 
 const EventGuestView: React.FC = () => {
@@ -36,6 +41,9 @@ const EventGuestView: React.FC = () => {
   const [claimingName, setClaimingName] = useState('');
   const [selectedNeed, setSelectedNeed] = useState<string | null>(null);
   const [isInvitee, setIsInvitee] = useState(false);
+  const [hasAccepted, setHasAccepted] = useState(false);
+  const [isAccepting, setIsAccepting] = useState(false);
+  const [actualCost, setActualCost] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) {
@@ -51,12 +59,13 @@ const EventGuestView: React.FC = () => {
         const response = await axios.get(`${API_URL}/api/events/token/${token}`);
         const eventData = response.data;  
         
-        // Check if user is an invitee
-        const isUserInvitee = eventData.invitees.some(
-          (invitee: { emailOrPhone: string }) => invitee.emailOrPhone === user.email
+        // Check if user is an invitee and if they've accepted
+        const userInvitee = eventData.invitees.find(
+          (invitee: IInvitee) => invitee.emailOrPhone === user.email
         );
         
-        setIsInvitee(isUserInvitee);
+        setIsInvitee(!!userInvitee);
+        setHasAccepted(userInvitee?.hasAccepted || false);
         setEvent(eventData);
       } catch (error) {
         console.error('Error fetching event:', error);
@@ -105,6 +114,69 @@ const EventGuestView: React.FC = () => {
     }
   };
 
+  const handleAcceptInvitation = async () => {
+    if (!event?._id || !user?.email) return;
+
+    setIsAccepting(true);
+    try {
+      await axios.put(`${API_URL}/api/events/${event._id}/accept`, {
+        emailOrPhone: user.email,
+        hasAccepted: true 
+      });
+      
+      setHasAccepted(true);
+      // Update local state
+      setEvent(prev => prev ? {
+        ...prev,
+        invitees: prev.invitees.map(invitee => 
+          invitee.emailOrPhone === user.email
+            ? { ...invitee, hasAccepted: true }
+            : invitee
+        )
+      } : null);
+    } catch (error) {
+      console.error('Error accepting invitation:', error);
+      alert('Failed to accept invitation.');
+    } finally {
+      setIsAccepting(false);
+    }
+  };
+
+  const handleUpdateCost = async (needId: string) => {
+    if (!event?._id) {
+      alert('Event ID is missing');
+      return;
+    }
+
+    const cost = actualCost[needId];
+    if (!cost || cost <= 0) {
+      alert('Please enter a valid cost');
+      return;
+    }
+
+    try {
+      await axios.put(`${API_URL}/api/events/${event._id}/needs/${needId}/cost`, {
+        actualCost: cost
+      });
+      
+      // Update local state
+      setEvent(prev => prev ? {
+        ...prev,
+        needs: prev.needs.map(need => 
+          need._id === needId 
+            ? { ...need, actualCost: cost }
+            : need
+        )
+      } : null);
+      
+      // Clear the input
+      setActualCost(prev => ({ ...prev, [needId]: 0 }));
+    } catch (error) {
+      console.error('Error updating cost:', error);
+      alert('Failed to update cost.');
+    }
+  };
+
   if (isAuthLoading || isLoading) {
     return <div className="text-center p-4">Loading...</div>;
   }
@@ -119,6 +191,29 @@ const EventGuestView: React.FC = () => {
 
   if (!isInvitee) {
     return <div className="text-center p-4">You are not invited to this event.</div>;
+  }
+
+  if (!hasAccepted) {
+    return (
+      <div className="max-w-xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
+        <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">{event.name}</h2>
+        
+        <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <h3 className="font-semibold mb-2">Event Details</h3>
+          <p>Date: {new Date(event.date).toLocaleString()}</p>
+          <p>Location: {event.location}</p>
+          {event.description && <p className="mt-2">{event.description}</p>}
+        </div>
+
+        <button
+          className="btn-primary w-full bg-primary-600 hover:bg-primary-700"
+          onClick={handleAcceptInvitation}
+          disabled={isAccepting}
+        >
+          {isAccepting ? 'Accepting...' : 'Accept Invitation'}
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -172,7 +267,12 @@ const EventGuestView: React.FC = () => {
                   <span className="font-medium">{need.item}</span>
                   {need.estimatedCost && (
                     <span className="ml-2 text-gray-600 dark:text-gray-400">
-                      (${need.estimatedCost})
+                      (Est: ${need.estimatedCost})
+                    </span>
+                  )}
+                  {need.actualCost && (
+                    <span className="ml-2 text-green-600 dark:text-green-400">
+                      (Actual: ${need.actualCost})
                     </span>
                   )}
                 </div>
@@ -184,9 +284,33 @@ const EventGuestView: React.FC = () => {
                     Claim
                   </button>
                 ) : (
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Claimed by {need.claimedBy}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Claimed by {need.claimedBy}
+                    </span>
+                    {need.claimedBy && !need.actualCost && (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          className="input w-24 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                          placeholder="Cost"
+                          value={actualCost[need._id] || ''}
+                          onChange={(e) => setActualCost(prev => ({
+                            ...prev,
+                            [need._id]: parseFloat(e.target.value) || 0
+                          }))}
+                          min="0"
+                          step="0.01"
+                        />
+                        <button
+                          className="btn bg-green-600 hover:bg-green-700"
+                          onClick={() => handleUpdateCost(need._id)}
+                        >
+                          Post Cost
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </li>

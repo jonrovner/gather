@@ -6,7 +6,8 @@ const API_URL = import.meta.env.VITE_API_URL;
 interface IInvitee {
   name: string;
   emailOrPhone: string;
-  reminderPreference: 'email' | 'sms';
+  hasAccepted?: boolean;
+  reminderPreference?: 'email' | 'sms';
 }
 
 interface IEvent {
@@ -116,7 +117,7 @@ const InviteGuests: React.FC = () => {
             />
             <select
               className="input dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-              value={newInvitee.reminderPreference}
+              value={newInvitee.reminderPreference || 'email'}
               onChange={(e) => setNewInvitee({...newInvitee, reminderPreference: e.target.value as 'email' | 'sms'})}
             >
               <option value="email">Email Reminders</option>
