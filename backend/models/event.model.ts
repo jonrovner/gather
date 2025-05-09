@@ -45,7 +45,7 @@ const InviteeSchema = new Schema<IInvitee>({
   emailOrPhone: { type: String, required: true },
   hasAccepted: { type: Boolean, default: false },
   reminderPreference: { type: String, enum: ['email', 'sms'] },
-  token: { type: String, required: true, unique: true }, // unique token for each invitee
+  token: { type: String, required: true, unique: true }, // This creates an index
   claimedItems: [{ type: String }], // array of need._id
 });
 
@@ -63,8 +63,5 @@ const EventSchema = new Schema<IEvent>(
   },
   { timestamps: true }
 );
-
-// Add an index for invitee tokens to ensure uniqueness across all events
-InviteeSchema.index({ token: 1 }, { unique: true });
 
 export const EventModel = mongoose.model<IEvent>('Event', EventSchema);
