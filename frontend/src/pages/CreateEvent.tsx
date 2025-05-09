@@ -9,7 +9,7 @@ interface INeed {
   _id: string;
   item: string;
   claimedBy?: string;
-  estimatedCost?: number;
+  cost?: number;
   status: 'open' | 'claimed';
 }
 
@@ -50,7 +50,7 @@ const CreateEvent: React.FC = () => {
       setNeeds([...needs, {
         _id: crypto.randomUUID(),
         item: newNeed,
-        estimatedCost: newNeedCost ? parseFloat(newNeedCost) : undefined,
+        cost: newNeedCost ? parseFloat(newNeedCost) : undefined,
         status: 'open'
       }]);
       setNewNeed('');
@@ -73,7 +73,7 @@ const CreateEvent: React.FC = () => {
         needs: needs.map(need => ({
           _id: need._id,
           item: need.item,
-          estimatedCost: need.estimatedCost,
+          cost: need.cost,
           status: need.status
         })),
         token: crypto.randomUUID()
@@ -151,7 +151,7 @@ const CreateEvent: React.FC = () => {
           <ul className="list-disc pl-5 text-gray-700 dark:text-gray-300">
             {needs.map((need, index) => (
               <li key={index}>
-                {need.item} {need.estimatedCost && `($${need.estimatedCost})`}
+                {need.item} {need.cost && `($${need.cost})`}
               </li>
             ))}
           </ul>

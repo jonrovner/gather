@@ -5,8 +5,7 @@ export interface INeed {
   _id: string;
   item: string;
   claimedBy?: string; // userId or name
-  estimatedCost?: number;
-  actualCost?: number;
+  cost?: number;
   status?: 'open' | 'claimed';
 }
 
@@ -15,6 +14,8 @@ export interface IInvitee {
   emailOrPhone: string;
   hasAccepted?: boolean;
   reminderPreference?: 'email' | 'sms';
+  token: string; // unique token for this invitee
+  claimedItems?: string[]; // array of need._id that this invitee has claimed
 }
 
 export interface IEvent extends Document {
@@ -27,7 +28,6 @@ export interface IEvent extends Document {
   needs: INeed[];
   invitees: IInvitee[];
   reminderMethod?: 'email' | 'sms' | 'both';
-  token: string; // for guest access
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,8 +36,7 @@ const NeedSchema = new Schema<INeed>({
   _id: { type: String, required: true },
   item: { type: String, required: true },
   claimedBy: String,
-  estimatedCost: Number,
-  actualCost: Number,
+  cost: Number,
   status: { type: String, enum: ['open', 'claimed'], default: 'open' },
 });
 
@@ -46,6 +45,8 @@ const InviteeSchema = new Schema<IInvitee>({
   emailOrPhone: { type: String, required: true },
   hasAccepted: { type: Boolean, default: false },
   reminderPreference: { type: String, enum: ['email', 'sms'] },
+  token: { type: String, required: true, unique: true }, // unique token for each invitee
+  claimedItems: [{ type: String }], // array of need._id
 });
 
 const EventSchema = new Schema<IEvent>(
@@ -59,9 +60,11 @@ const EventSchema = new Schema<IEvent>(
     needs: [NeedSchema],
     invitees: [InviteeSchema],
     reminderMethod: { type: String, enum: ['email', 'sms', 'both'] },
-    token: { type: String, required: true, unique: true },
   },
   { timestamps: true }
 );
+
+// Add an index for invitee tokens to ensure uniqueness across all events
+InviteeSchema.index({ token: 1 }, { unique: true });
 
 export const EventModel = mongoose.model<IEvent>('Event', EventSchema);

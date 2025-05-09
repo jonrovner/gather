@@ -8,6 +8,8 @@ interface IInvitee {
   emailOrPhone: string;
   hasAccepted?: boolean;
   reminderPreference?: 'email' | 'sms';
+  token?: string;
+  claimedItems?: string[];
 }
 
 interface IEvent {
@@ -15,8 +17,7 @@ interface IEvent {
   name: string;
   date: string;
   location: string;
-  token: string;
-  shareableLink?: string;
+  invitees: IInvitee[];
 }
 
 const InviteGuests: React.FC = () => {
@@ -37,6 +38,9 @@ const InviteGuests: React.FC = () => {
       try {
         const response = await axios.get(`${API_URL}/api/events/${id}`);
         setEvent(response.data);
+        if (response.data.invitees) {
+          setInvitees(response.data.invitees);
+        }
       } catch (error) {
         console.error('Error fetching event:', error);
         alert('Failed to load event details.');
@@ -51,14 +55,29 @@ const InviteGuests: React.FC = () => {
   }, [id]);
 
   const handleAddInvitee = () => {
-    if (newInvitee.emailOrPhone.trim() !== '') {
-      setInvitees([...invitees, newInvitee]);
-      setNewInvitee({
-        name: '',
-        emailOrPhone: '',
-        reminderPreference: 'email'
-      });
+    if (!newInvitee.emailOrPhone.trim()) {
+      alert('Please enter an email or phone number');
+      return;
     }
+
+    if (newInvitee.emailOrPhone.includes('@')) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(newInvitee.emailOrPhone)) {
+        alert('Please enter a valid email address');
+        return;
+      }
+    }
+
+    setInvitees([...invitees, newInvitee]);
+    setNewInvitee({
+      name: '',
+      emailOrPhone: '',
+      reminderPreference: 'email'
+    });
+  };
+
+  const handleRemoveInvitee = (index: number) => {
+    setInvitees(invitees.filter((_, i) => i !== index));
   };
 
   const handleSendInvitations = async () => {
@@ -68,7 +87,7 @@ const InviteGuests: React.FC = () => {
     try {
       await axios.post(`${API_URL}/api/events/${id}/invite`, { invitees });
       alert('Invitations sent successfully!');
-      navigate('/events'); // Navigate back to events list
+      navigate('/events');
     } catch (error) {
       console.error('Error sending invitations:', error);
       alert('Failed to send invitations.');
@@ -93,9 +112,6 @@ const InviteGuests: React.FC = () => {
         <h3 className="font-semibold mb-2">Event Details</h3>
         <p>Date: {new Date(event.date).toLocaleString()}</p>
         <p>Location: {event.location}</p>
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          Share this link with guests: {event.shareableLink || 'Loading...'}
-        </p>
       </div>
 
       <div className="space-y-4">
@@ -136,10 +152,20 @@ const InviteGuests: React.FC = () => {
         {invitees.length > 0 && (
           <div>
             <h3 className="font-semibold mb-2">Guest List</h3>
-            <ul className="list-disc pl-5 text-gray-700 dark:text-gray-300">
+            <ul className="space-y-2">
               {invitees.map((invitee, index) => (
-                <li key={index}>
-                  {invitee.name || 'Anonymous'} - {invitee.emailOrPhone} ({invitee.reminderPreference})
+                <li key={index} className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-700 rounded">
+                  <div>
+                    <span className="font-medium">{invitee.name || 'Anonymous'}</span>
+                    <span className="text-gray-600 dark:text-gray-400"> - {invitee.emailOrPhone}</span>
+                    <span className="text-sm text-gray-500"> ({invitee.reminderPreference})</span>
+                  </div>
+                  <button
+                    onClick={() => handleRemoveInvitee(index)}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    Remove
+                  </button>
                 </li>
               ))}
             </ul>

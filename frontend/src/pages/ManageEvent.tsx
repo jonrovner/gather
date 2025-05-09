@@ -5,8 +5,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 const API_URL = import.meta.env.VITE_API_URL;
 
 interface INeed {
+  _id?: string;
   item: string;
-  estimatedCost?: number;
+  cost?: number;
   status: 'open' | 'claimed';
   claimedBy?: string;
 }
@@ -89,7 +90,7 @@ const ManageEvent: React.FC = () => {
     if (newNeed.trim() !== '') {
       setNeeds([...needs, {
         item: newNeed,
-        estimatedCost: newNeedCost ? parseFloat(newNeedCost) : undefined,
+        cost: newNeedCost ? parseFloat(newNeedCost) : undefined,
         status: 'open'
       }]);
       setNewNeed('');
@@ -99,6 +100,26 @@ const ManageEvent: React.FC = () => {
 
   const handleRemoveNeed = (index: number) => {
     setNeeds(needs.filter((_, i) => i !== index));
+  };
+
+  const handleClaimNeed = (index: number) => {
+    if (!user?.sub) return;
+    const updatedNeeds = [...needs];
+    updatedNeeds[index] = {
+      ...updatedNeeds[index],
+      status: 'claimed',
+      claimedBy: user.name || user.email || user.sub
+    };
+    setNeeds(updatedNeeds);
+  };
+
+  const handleUpdateNeedCost = (index: number, cost: string) => {
+    const updatedNeeds = [...needs];
+    updatedNeeds[index] = {
+      ...updatedNeeds[index],
+      cost: cost ? parseFloat(cost) : undefined
+    };
+    setNeeds(updatedNeeds);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -112,9 +133,11 @@ const ManageEvent: React.FC = () => {
         date: new Date(date),
         location,
         needs: needs.map(need => ({
+          _id: need._id,
           item: need.item,
-          estimatedCost: need.estimatedCost,
-          status: need.status
+          cost: need.cost,
+          status: need.status,
+          claimedBy: need.claimedBy
         }))
       };
 
@@ -217,19 +240,39 @@ const ManageEvent: React.FC = () => {
           <ul className="space-y-2">
             {needs.map((need, index) => (
               <li key={index} className="flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-700 rounded">
-                <span className="text-gray-700 dark:text-gray-300">
-                  {need.item} {need.estimatedCost && `($${need.estimatedCost})`}
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-700 dark:text-gray-300">
+                    {need.item}
+                  </span>
+                  <input
+                    type="number"
+                    className="input w-24 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    placeholder="Cost"
+                    value={need.cost || ''}
+                    onChange={(e) => handleUpdateNeedCost(index, e.target.value)}
+                  />
                   <span className={`ml-2 text-sm ${need.status === 'claimed' ? 'text-green-600' : 'text-yellow-600'}`}>
                     {need.status === 'claimed' ? `Claimed by ${need.claimedBy}` : need.status}
                   </span>
-                </span>
-                <button
-                  type="button"
-                  className="text-red-600 hover:text-red-800"
-                  onClick={() => handleRemoveNeed(index)}
-                >
-                  Remove
-                </button>
+                </div>
+                <div className="flex gap-2">
+                  {need.status !== 'claimed' && (
+                    <button
+                      type="button"
+                      className="text-green-600 hover:text-green-800"
+                      onClick={() => handleClaimNeed(index)}
+                    >
+                      Claim
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="text-red-600 hover:text-red-800"
+                    onClick={() => handleRemoveNeed(index)}
+                  >
+                    Remove
+                  </button>
+                </div>
               </li>
             ))}
           </ul>

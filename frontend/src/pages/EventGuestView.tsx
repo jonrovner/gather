@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { useAuth0 } from '@auth0/auth0-react';
 import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -13,60 +12,41 @@ interface INeed {
   status: 'open' | 'claimed';
 }
 
-interface IInvitee {
-  name: string;
-  emailOrPhone: string;
-  hasAccepted?: boolean;
-  reminderPreference?: 'email' | 'sms';
-}
-
 interface IEvent {
   _id: string;
-  id: string;
   name: string;
   description?: string;
   date: string;
   location: string;
   needs: INeed[];
-  token: string;
-  invitees: IInvitee[];
+  invitee: {
+    name: string;
+    emailOrPhone: string;
+    hasAccepted: boolean;
+    claimedItems: string[];
+  };
 }
 
 const EventGuestView: React.FC = () => {
   const { token } = useParams<{ token: string }>();
-  const { user, isAuthenticated, isLoading: isAuthLoading, loginWithRedirect } = useAuth0();
 
   const [event, setEvent] = useState<IEvent | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [claimingName, setClaimingName] = useState('');
   const [selectedNeed, setSelectedNeed] = useState<string | null>(null);
-  const [isInvitee, setIsInvitee] = useState(false);
   const [hasAccepted, setHasAccepted] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
   const [actualCost, setActualCost] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
-    if (!isAuthLoading && !isAuthenticated) {
-      loginWithRedirect();
-    }
-  }, [isAuthLoading, isAuthenticated, loginWithRedirect]);
-
-  useEffect(() => {
     const fetchEvent = async () => {
-      if (!token || !isAuthenticated || !user?.email) return;
+      if (!token) return;
 
       try {
-        const response = await axios.get(`${API_URL}/api/events/token/${token}`);
+        const response = await axios.get(`${API_URL}/api/events/guest/${token}`);
         const eventData = response.data;  
         
-        // Check if user is an invitee and if they've accepted
-        const userInvitee = eventData.invitees.find(
-          (invitee: IInvitee) => invitee.emailOrPhone === user.email
-        );
-        
-        setIsInvitee(!!userInvitee);
-        setHasAccepted(userInvitee?.hasAccepted || false);
         setEvent(eventData);
+        setHasAccepted(eventData.invitee?.hasAccepted || false);
       } catch (error) {
         console.error('Error fetching event:', error);
         alert('Failed to load event details.');
@@ -75,38 +55,30 @@ const EventGuestView: React.FC = () => {
       }
     };
 
-    if (token && isAuthenticated && user?.email) {
+    if (token) {
       fetchEvent();
     }
-  }, [token, isAuthenticated, user?.email]);
+  }, [token]);
 
   const handleClaimItem = async (needId: string) => {
-    if (!claimingName.trim()) {
-      alert('Please enter your name to claim an item');
-      return;
-    }
-
     if (!event?._id) {
       alert('Event ID is missing');
       return;
     }
 
     try {
-      await axios.put(`${API_URL}/api/events/${event._id}/needs/${needId}/claim`, {
-        claimedBy: claimingName
-      });
+      await axios.put(`${API_URL}/api/events/invitee/${token}/needs/${needId}/claim`);
       
       // Update local state
       setEvent(prev => prev ? {
         ...prev,
         needs: prev.needs.map(need => 
           need._id === needId 
-            ? { ...need, claimedBy: claimingName, status: 'claimed' }
+            ? { ...need, claimedBy: prev.invitee.name, status: 'claimed' }
             : need
         )
       } : null);
       
-      setClaimingName('');
       setSelectedNeed(null);
     } catch (error) {
       console.error('Error claiming item:', error);
@@ -115,12 +87,11 @@ const EventGuestView: React.FC = () => {
   };
 
   const handleAcceptInvitation = async () => {
-    if (!event?._id || !user?.email) return;
+    if (!token) return;
 
     setIsAccepting(true);
     try {
-      await axios.put(`${API_URL}/api/events/${event._id}/accept`, {
-        emailOrPhone: user.email,
+      await axios.put(`${API_URL}/api/events/invitee/${token}/accept`, {
         hasAccepted: true 
       });
       
@@ -128,11 +99,10 @@ const EventGuestView: React.FC = () => {
       // Update local state
       setEvent(prev => prev ? {
         ...prev,
-        invitees: prev.invitees.map(invitee => 
-          invitee.emailOrPhone === user.email
-            ? { ...invitee, hasAccepted: true }
-            : invitee
-        )
+        invitee: {
+          ...prev.invitee,
+          hasAccepted: true
+        }
       } : null);
     } catch (error) {
       console.error('Error accepting invitation:', error);
@@ -177,20 +147,12 @@ const EventGuestView: React.FC = () => {
     }
   };
 
-  if (isAuthLoading || isLoading) {
+  if (isLoading) {
     return <div className="text-center p-4">Loading...</div>;
-  }
-
-  if (!isAuthenticated) {
-    return <div className="text-center p-4">Please log in to view this event.</div>;
   }
 
   if (!event) {
     return <div className="text-center p-4">Event not found</div>;
-  }
-
-  if (!isInvitee) {
-    return <div className="text-center p-4">You are not invited to this event.</div>;
   }
 
   if (!hasAccepted) {
@@ -236,8 +198,8 @@ const EventGuestView: React.FC = () => {
             <input
               className="input dark:bg-gray-700 dark:border-gray-600 dark:text-white mb-2"
               placeholder="Your Name"
-              value={claimingName}
-              onChange={(e) => setClaimingName(e.target.value)}
+              value={event.invitee.name}
+              onChange={(e) => {}}
             />
             <div className="flex gap-2">
               <button
