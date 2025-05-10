@@ -199,7 +199,7 @@ const EventGuestView: React.FC = () => {
               className="input dark:bg-gray-700 dark:border-gray-600 dark:text-white mb-2"
               placeholder="Your Name"
               value={event.invitee.name}
-              onChange={(e) => {}}
+              readOnly
             />
             <div className="flex gap-2">
               <button
