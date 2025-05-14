@@ -44,6 +44,7 @@ const EventGuestView: React.FC = () => {
       try {
         const response = await axios.get(`${API_URL}/api/events/guest/${token}`);
         const eventData = response.data;  
+        console.log('Fetched event data:', eventData); // Debug log
         
         setEvent(eventData);
         setHasAccepted(eventData.invitee?.hasAccepted || false);
@@ -126,7 +127,7 @@ const EventGuestView: React.FC = () => {
 
     try {
       await axios.put(`${API_URL}/api/events/${event._id}/needs/${needId}/cost`, {
-        actualCost: cost
+        cost: cost
       });
       
       // Update local state
@@ -158,6 +159,9 @@ const EventGuestView: React.FC = () => {
   if (!hasAccepted) {
     return (
       <div className="max-w-xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
+        <div className="mb-4 text-gray-600 dark:text-gray-400">
+          Logged in as: {event.invitee.name}
+        </div>
         <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">{event.name}</h2>
         
         <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -180,6 +184,9 @@ const EventGuestView: React.FC = () => {
 
   return (
     <div className="max-w-xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
+      <div className="mb-4 text-gray-600 dark:text-gray-400">
+        Logged in as: {event.invitee.name}
+      </div>
       <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">{event.name}</h2>
       
       <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -227,16 +234,18 @@ const EventGuestView: React.FC = () => {
               <div className="flex justify-between items-center">
                 <div>
                   <span className="font-medium">{need.item}</span>
-                  {need.estimatedCost && (
-                    <span className="ml-2 text-gray-600 dark:text-gray-400">
-                      (Est: ${need.estimatedCost})
-                    </span>
-                  )}
-                  {need.actualCost && (
-                    <span className="ml-2 text-green-600 dark:text-green-400">
-                      (Actual: ${need.actualCost})
-                    </span>
-                  )}
+                  <div className="text-sm mt-1">
+                    {typeof need.estimatedCost === 'number' && (
+                      <span className="text-gray-600 dark:text-gray-400 mr-3">
+                        Estimated: ${need.estimatedCost.toFixed(2)}
+                      </span>
+                    )}
+                    {typeof need.actualCost === 'number' && (
+                      <span className="text-green-600 dark:text-green-400 font-medium">
+                        Actual: ${need.actualCost.toFixed(2)}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 {need.status === 'open' ? (
                   <button
@@ -250,7 +259,7 @@ const EventGuestView: React.FC = () => {
                     <span className="text-sm text-gray-600 dark:text-gray-400">
                       Claimed by {need.claimedBy}
                     </span>
-                    {need.claimedBy && !need.actualCost && (
+                    {need.claimedBy === event.invitee.name && !need.actualCost && (
                       <div className="flex items-center gap-2">
                         <input
                           type="number"

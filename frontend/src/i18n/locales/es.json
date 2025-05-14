@@ -7,7 +7,10 @@
     "light": "Claro",
     "dark": "Oscuro",
     "loading": "Cargando...",
-    "add": "Añadir"
+    "add": "Añadir",
+    "back": "Volver al Evento",
+    "save": "Guardar Cambios",
+    "back": "Volver al Evento"
   },
   "event": {
     "name": "Nombre del Evento",
@@ -17,26 +20,84 @@
     "needs": "Cosas que Necesitas",
     "invitees": "Invitados",
     "create": "Crear Evento",
-    "manage": "Gestionar Evento",
+    "manage": {
+      "title": "Administrar Evento - {{eventName}}",
+      "button": "Gestionar Evento",
+      "invitations": "Gestionar Invitaciones"
+    },
     "invite": "Invitar Invitados",
     "loading": "Cargando eventos...",
     "hostedBy": "Organizado por {{host}}",
-    "myEvents": "Mis Eventos", 
-    "error": {
-      "loading": "Error al cargar los eventos",
-      "create": "Error al crear el evento"
-    },
-    "loginRequired": "Por favor, inicia sesión para ver tus eventos",
+    "myEvents": "Mis Eventos",
+    "invitedEvents": "Eventos a los que estoy invitado",
     "noEvents": "No hay eventos próximos",
     "createFirst": "Crea tu primer evento",
     "itemsNeeded": "{{count}} elementos necesarios",
     "needPlaceholder": "ej. Hamburguesas",
-    "cost": "Costo"
+    "cost": "Costo",
+    "notFound": "Evento no encontrado",
+    "error": {
+      "loading": "Error al cargar los eventos",
+      "create": "Error al crear el evento",
+      "updateFailed": "Error al actualizar el evento.",
+      "deleteFailed": "Error al eliminar el evento."
+    },
+    "loginRequired": "Por favor, inicia sesión para ver tus eventos"
   },
   "guest": {
     "view": "Vista de Invitado",
     "accept": "Aceptar",
     "decline": "Declinar",
     "bring": "Llevaré"
+  },
+  "billSplit": {
+    "title": "División de Cuenta - {{eventName}}",
+    "person": "Persona",
+    "paid": "Pagado",
+    "owes": "Debe",
+    "balance": "Balance",
+    "include": "Incluir",
+    "actions": "Acciones",
+    "included": "Incluido",
+    "excluded": "Excluido",
+    "total": "Total",
+    "requestPayment": "Solicitar Pago",
+    "sending": "Enviando...",
+    "error": {
+      "missingContact": "No se puede enviar la solicitud de pago: Falta información de contacto",
+      "paymentRequestFailed": "Error al enviar el correo de solicitud de pago",
+      "noEmail": "No hay dirección de correo disponible"
+    },
+    "success": {
+      "paymentRequestSent": "¡Correo de solicitud de pago enviado con éxito!"
+    }
+  },
+  "invite": {
+    "title": "Invitar Invitados a {{eventName}}",
+    "addGuests": "Agregar Invitados",
+    "namePlaceholder": "Nombre (opcional)",
+    "contactPlaceholder": "Correo o Teléfono",
+    "emailReminders": "Recordatorios por Correo",
+    "smsReminders": "Recordatorios por SMS",
+    "addGuest": "Agregar Invitado",
+    "guestList": "Lista de Invitados",
+    "anonymous": "Anónimo",
+    "remove": "Eliminar",
+    "sending": "Enviando...",
+    "sendInvitations": "Enviar Invitaciones",
+    "status": {
+      "pending": "Pendiente",
+      "sent": "Enviado",
+      "accepted": "Aceptado",
+      "declined": "Rechazado"
+    },
+    "error": {
+      "noContact": "Por favor ingrese un correo o número de teléfono",
+      "invalidEmail": "Por favor ingrese un correo válido",
+      "sendFailed": "Error al enviar las invitaciones."
+    },
+    "success": {
+      "sent": "¡Invitaciones enviadas con éxito!"
+    }
   }
 } 

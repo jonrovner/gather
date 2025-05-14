@@ -7,6 +7,7 @@ import InviteGuests from './pages/InviteGuests'
 import EventGuestView from './pages/EventGuestView'
 import EventsList from './components/EventsList'
 import ManageEvent from './pages/ManageEvent'
+import BillSplit from './pages/BillSplit'
 
 const Navbar: React.FC = () => {
   const { t, i18n } = useTranslation()
@@ -113,6 +114,7 @@ const App: React.FC = () => {
               <Route path="/events/:id/invite" element={<InviteGuests />} />
               <Route path="/events/:id/manage" element={<ManageEvent />} />
               <Route path="/event/guest/:token" element={<EventGuestView />} />
+              <Route path="/events/:id/bill-split" element={<BillSplit />} />
             </Routes>
           </div>
         </div>

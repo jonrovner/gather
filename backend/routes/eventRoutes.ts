@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import mongoose from 'mongoose';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import { IInvitee } from '../models/event.model';
 dotenv.config();
 
 interface INeed {
@@ -16,12 +17,44 @@ interface INeed {
 }
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.mailersend.net',
+  port: 587,
+  secure: false,
   auth: {
-    user: process.env.EMAIL_USER, // Your email address
-    pass: process.env.EMAIL_PASS, // Your email password or app password
+    user: process.env.EMAIL_USERNAME,
+    pass: process.env.EMAIL_PASSWORD,
   },
 });
+
+// Add a default "from" address using a verified domain
+const DEFAULT_FROM_EMAIL = 'noreply@test-51ndgwvro6rlzqx8.mlsender.net'; // Replace with your verified domain
+
+type SupportedLanguage = 'en' | 'es';
+
+// Email templates for different languages
+const emailTemplates: Record<SupportedLanguage, {
+  subject: (eventName: string) => string;
+  body: (inviteeName: string, hostName: string, eventName: string, eventDate: string, eventLocation: string, invitationUrl: string) => string;
+}> = {
+  en: {
+    subject: (eventName: string) => `You're invited to ${eventName}!`,
+    body: (inviteeName: string, hostName: string, eventName: string, eventDate: string, eventLocation: string, invitationUrl: string) => 
+      `Hi ${inviteeName}! ${hostName} has invited you to ${eventName} on ${eventDate} at ${eventLocation}.
+      To view the event and claim needs, click this link: ${invitationUrl}
+      
+      Important: This invitation link is unique to you and should not be shared. It provides access to your personal invitation to ${eventName}.
+      If you share this link, others could accept the invitation or claim items on your behalf.`
+  },
+  es: {
+    subject: (eventName: string) => `¡Estás invitado a ${eventName}!`,
+    body: (inviteeName: string, hostName: string, eventName: string, eventDate: string, eventLocation: string, invitationUrl: string) => 
+      `¡Hola ${inviteeName}! ${hostName} te ha invitado a ${eventName} el ${eventDate} en ${eventLocation}.
+      Para ver el evento y reclamar necesidades, haz clic en este enlace: ${invitationUrl}
+      
+      Importante: Este enlace de invitación es único para ti y no debe compartirse. Proporciona acceso a tu invitación personal a ${eventName}.
+      Si compartes este enlace, otros podrían aceptar la invitación o reclamar artículos en tu nombre.`
+  }
+};
 
 const router = Router();
 
@@ -38,6 +71,7 @@ router.post('/', async (req: Request, res: Response) => {
       hostName,
       needs = [],
       reminderMethod,
+      languagePreference = 'en', // Default to English if not specified
     } = req.body;
 
     const newEvent = new EventModel({
@@ -54,6 +88,7 @@ router.post('/', async (req: Request, res: Response) => {
       })),
       invitees: [], // Initialize with empty array
       reminderMethod,
+      languagePreference,
     });
 
     await newEvent.save();
@@ -120,7 +155,7 @@ router.delete<{ id: string }>('/:id', async (req: Request<{ id: string }>, res: 
 }); 
 
 
-// Get Event by Invitee Token (keeping the /guest/ URL structure)
+// Get Event by Invitee Token
 router.get('/guest/:token', async (req: Request<{ token: string }>, res: Response) => {
   try {
     const event = await EventModel.findOne({ 'invitees.token': req.params.token })
@@ -144,7 +179,7 @@ router.get('/guest/:token', async (req: Request<{ token: string }>, res: Respons
       invitee: {
         name: invitee.name,
         emailOrPhone: invitee.emailOrPhone,
-        hasAccepted: invitee.hasAccepted,
+        invitation: invitee.invitation,
         claimedItems: invitee.claimedItems
       }
     });
@@ -175,28 +210,39 @@ router.post<{ id: string }>('/:id/invite', async (req: Request<{ id: string }>, 
       ...invitee,
       token: uuidv4(),
       claimedItems: [],
-      hasAccepted: false
+      invitation: 'sent'
     }));
 
-    // Update the event with new invitees
+    // Add new invitees to the event
     event.invitees = [...event.invitees, ...newInvitees];
     await event.save();
 
-    // Send emails with individual invitee tokens
+    // Send emails to all new invitees
     for (const invitee of newInvitees) {
       if (invitee.emailOrPhone && invitee.reminderPreference === 'email') {
         const encodedToken = encodeURIComponent(invitee.token);
         const invitationUrl = `${process.env.CORS_ORIGIN}/event/guest/${encodedToken}`;
+        const language = event.languagePreference;
+        const template = emailTemplates[language];
+        const formattedDate = event.date.toLocaleDateString(language === 'en' ? 'en-US' : 'es-ES', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
 
         const mailOptions = {
-          from: process.env.EMAIL_USER,
+          from: DEFAULT_FROM_EMAIL,
           to: invitee.emailOrPhone,
-          subject: `You're invited to ${event.name}!`,
-          text: `Hi ${invitee.name}! ${event.hostName} has invited you to ${event.name} on ${event.date} at ${event.location}.
-          To view the event and claim needs, click this link: ${invitationUrl}
-          
-          Important: This invitation link is unique to you and should not be shared. It provides access to your personal invitation to ${event.name}.
-          If you share this link, others could accept the invitation or claim items on your behalf.`,
+          subject: template.subject(event.name),
+          text: template.body(
+            invitee.name,
+            event.hostName,
+            event.name,
+            formattedDate,
+            event.location,
+            invitationUrl
+          ),
         };
 
         try {
@@ -229,7 +275,12 @@ router.post<{ id: string }>('/:id/invite', async (req: Request<{ id: string }>, 
 router.put<{ token: string }>('/invitee/:token/accept', async (req: Request<{ token: string }>, res: Response) => {
   try {
     const { token } = req.params;
-    const { hasAccepted } = req.body;
+    const { status } = req.body;
+
+    if (!['accepted', 'rejected'].includes(status)) {
+      res.status(400).json({ message: 'Invalid invitation status' });
+      return;
+    }
 
     const event = await EventModel.findOne({ 'invitees.token': token });
     if (!event) {
@@ -243,13 +294,13 @@ router.put<{ token: string }>('/invitee/:token/accept', async (req: Request<{ to
       return;
     }
 
-    invitee.hasAccepted = hasAccepted;
+    invitee.invitation = status;
     await event.save();
 
-    res.status(200).json({ message: 'Invitation accepted successfully' });
+    res.status(200).json({ message: `Invitation ${status} successfully` });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Failed to accept invitation' });
+    res.status(500).json({ message: 'Failed to update invitation status' });
   }
 });
 
@@ -396,6 +447,39 @@ router.put<{ id: string; needId: string }>('/:id/needs/:needId/cost', async (req
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Failed to update cost' });
+  }
+});
+
+// Send Payment Request Email
+router.post<{ id: string }>('/:id/payment-request', async (req: Request<{ id: string }>, res: Response) => {
+  try {
+    const { amount, recipient, recipientEmail, eventName, hostName, hostEmail } = req.body;
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: recipientEmail,
+      subject: `Payment Request for ${eventName}`,
+      text: `Hi ${recipient},
+
+${hostName} has requested payment for ${eventName}.
+
+Amount due: $${amount.toFixed(2)}
+
+Please send the payment to:
+${hostName}
+${hostEmail}
+
+Thank you for your prompt payment!
+
+Best regards,
+The Gather Team`
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.status(200).json({ message: 'Payment request email sent successfully' });
+  } catch (err) {
+    console.error('Error sending payment request email:', err);
+    res.status(500).json({ message: 'Failed to send payment request email' });
   }
 });
 

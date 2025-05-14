@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL;
 
 interface IInvitee {
   name: string;
   emailOrPhone: string;
-  hasAccepted?: boolean;
+  invitation: 'pending' | 'sent' | 'accepted' | 'rejected';
   reminderPreference?: 'email' | 'sms';
   token?: string;
   claimedItems?: string[];
@@ -21,14 +22,17 @@ interface IEvent {
 }
 
 const InviteGuests: React.FC = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
   const [event, setEvent] = useState<IEvent | null>(null);
   const [invitees, setInvitees] = useState<IInvitee[]>([]);
   const [newInvitee, setNewInvitee] = useState<IInvitee>({
     name: '',
     emailOrPhone: '',
-    reminderPreference: 'email'
+    reminderPreference: 'email',
+    invitation: 'pending'
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
@@ -39,7 +43,10 @@ const InviteGuests: React.FC = () => {
         const response = await axios.get(`${API_URL}/api/events/${id}`);
         setEvent(response.data);
         if (response.data.invitees) {
-          setInvitees(response.data.invitees);
+          const pendingInvitees = response.data.invitees.filter(
+            (invitee: IInvitee) => invitee.invitation !== 'accepted' && invitee.invitation !== 'rejected'
+          );
+          setInvitees(pendingInvitees);
         }
       } catch (error) {
         console.error('Error fetching event:', error);
@@ -56,14 +63,14 @@ const InviteGuests: React.FC = () => {
 
   const handleAddInvitee = () => {
     if (!newInvitee.emailOrPhone.trim()) {
-      alert('Please enter an email or phone number');
+      alert(t('invite.error.noContact'));
       return;
     }
 
     if (newInvitee.emailOrPhone.includes('@')) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(newInvitee.emailOrPhone)) {
-        alert('Please enter a valid email address');
+        alert(t('invite.error.invalidEmail'));
         return;
       }
     }
@@ -72,7 +79,8 @@ const InviteGuests: React.FC = () => {
     setNewInvitee({
       name: '',
       emailOrPhone: '',
-      reminderPreference: 'email'
+      reminderPreference: 'email',
+      invitation: 'pending'
     });
   };
 
@@ -86,47 +94,49 @@ const InviteGuests: React.FC = () => {
     setIsSending(true);
     try {
       await axios.post(`${API_URL}/api/events/${id}/invite`, { invitees });
-      alert('Invitations sent successfully!');
-      navigate('/events');
+      alert(t('invite.success.sent'));
+      navigate('/');
     } catch (error) {
       console.error('Error sending invitations:', error);
-      alert('Failed to send invitations.');
+      alert(t('invite.error.sendFailed'));
     } finally {
       setIsSending(false);
     }
   };
 
   if (isLoading) {
-    return <div className="text-center p-4">Loading...</div>;
+    return <div className="text-center p-4">{t('common.loading')}</div>;
   }
 
   if (!event) {
-    return <div className="text-center p-4">Event not found</div>;
+    return <div className="text-center p-4">{t('event.notFound')}</div>;
   }
 
   return (
     <div className="max-w-xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
-      <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Invite Guests to {event.name}</h2>
+      <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+        {t('invite.title', { eventName: event.name })}
+      </h2>
       
       <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-        <h3 className="font-semibold mb-2">Event Details</h3>
-        <p>Date: {new Date(event.date).toLocaleString()}</p>
-        <p>Location: {event.location}</p>
+        <h3 className="font-semibold mb-2">{t('event.details')}</h3>
+        <p>{t('event.date')}: {new Date(event.date).toLocaleString()}</p>
+        <p>{t('event.location')}: {event.location}</p>
       </div>
 
       <div className="space-y-4">
         <div>
-          <label className="block mb-1 text-gray-700 dark:text-gray-300">Add Guests</label>
+          <label className="block mb-1 text-gray-700 dark:text-gray-300">{t('invite.addGuests')}</label>
           <div className="space-y-2">
             <input 
               className="input dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
-              placeholder="Name (optional)" 
+              placeholder={t('invite.namePlaceholder')} 
               value={newInvitee.name} 
               onChange={(e) => setNewInvitee({...newInvitee, name: e.target.value})} 
             />
             <input 
               className="input dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
-              placeholder="Email or Phone" 
+              placeholder={t('invite.contactPlaceholder')} 
               value={newInvitee.emailOrPhone} 
               onChange={(e) => setNewInvitee({...newInvitee, emailOrPhone: e.target.value})} 
               required
@@ -136,35 +146,40 @@ const InviteGuests: React.FC = () => {
               value={newInvitee.reminderPreference || 'email'}
               onChange={(e) => setNewInvitee({...newInvitee, reminderPreference: e.target.value as 'email' | 'sms'})}
             >
-              <option value="email">Email Reminders</option>
-              <option value="sms">SMS Reminders</option>
+              <option value="email">{t('invite.emailReminders')}</option>
+              <option value="sms">{t('invite.smsReminders')}</option>
             </select>
             <button 
               type="button" 
               className="btn bg-primary-600 hover:bg-primary-700" 
               onClick={handleAddInvitee}
             >
-              Add Guest
+              {t('invite.addGuest')}
             </button>
           </div>
         </div>
 
         {invitees.length > 0 && (
           <div>
-            <h3 className="font-semibold mb-2">Guest List</h3>
+            <h3 className="font-semibold mb-2">{t('invite.guestList')}</h3>
             <ul className="space-y-2">
               {invitees.map((invitee, index) => (
                 <li key={index} className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-700 rounded">
                   <div>
-                    <span className="font-medium">{invitee.name || 'Anonymous'}</span>
+                    <span className="font-medium">{invitee.name || t('invite.anonymous')}</span>
                     <span className="text-gray-600 dark:text-gray-400"> - {invitee.emailOrPhone}</span>
                     <span className="text-sm text-gray-500"> ({invitee.reminderPreference})</span>
+                    <span className={`ml-2 text-sm ${
+                      invitee.invitation === 'sent' ? 'text-blue-600' : 'text-yellow-600'
+                    }`}>
+                      {t(`invite.status.${invitee.invitation}`)}
+                    </span>
                   </div>
                   <button
                     onClick={() => handleRemoveInvitee(index)}
                     className="text-red-600 hover:text-red-800"
                   >
-                    Remove
+                    {t('invite.remove')}
                   </button>
                 </li>
               ))}
@@ -178,7 +193,7 @@ const InviteGuests: React.FC = () => {
           onClick={handleSendInvitations}
           disabled={isSending || invitees.length === 0}
         >
-          {isSending ? 'Sending...' : 'Send Invitations'}
+          {isSending ? t('invite.sending') : t('invite.sendInvitations')}
         </button>
       </div>
     </div>

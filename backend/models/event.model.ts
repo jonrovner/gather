@@ -12,7 +12,7 @@ export interface INeed {
 export interface IInvitee {
   name: string;
   emailOrPhone: string;
-  hasAccepted?: boolean;
+  invitation: 'pending' | 'sent' | 'accepted' | 'rejected';
   reminderPreference?: 'email' | 'sms';
   token: string; // unique token for this invitee
   claimedItems?: string[]; // array of need._id that this invitee has claimed
@@ -28,6 +28,7 @@ export interface IEvent extends Document {
   needs: INeed[];
   invitees: IInvitee[];
   reminderMethod?: 'email' | 'sms' | 'both';
+  languagePreference: 'en' | 'es'; // supported languages
   createdAt: Date;
   updatedAt: Date;
 }
@@ -41,25 +42,26 @@ const NeedSchema = new Schema<INeed>({
 });
 
 const InviteeSchema = new Schema<IInvitee>({
-  name: { type: String, required: true },
-  emailOrPhone: { type: String, required: true },
-  hasAccepted: { type: Boolean, default: false },
+  name: { type: String },
+  emailOrPhone: { type: String },
+  invitation: { type: String, enum: ['pending', 'sent', 'accepted', 'rejected'], default: 'pending' },
   reminderPreference: { type: String, enum: ['email', 'sms'] },
-  token: { type: String, required: true, unique: true }, // This creates an index
+  token: { type: String, index: true },
   claimedItems: [{ type: String }], // array of need._id
 });
 
 const EventSchema = new Schema<IEvent>(
   {
-    name: { type: String, required: true },
+    name: { type: String},
     description: String,
-    date: { type: Date, required: true },
-    location: { type: String, required: true },
-    creator: { type: String, required: true },
-    hostName: { type: String, required: true },
+    date: { type: Date },
+    location: { type: String },
+    creator: { type: String },
+    hostName: { type: String},
     needs: [NeedSchema],
     invitees: [InviteeSchema],
-    reminderMethod: { type: String, enum: ['email', 'sms', 'both'] },
+    reminderMethod: { type: String, enum: ['email', 'sms'] },
+    languagePreference: { type: String, enum: ['en', 'es'], default: 'en' },
   },
   { timestamps: true }
 );

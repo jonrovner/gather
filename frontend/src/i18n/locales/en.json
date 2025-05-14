@@ -7,7 +7,10 @@
     "light": "Light",
     "dark": "Dark",
     "loading": "Loading...",
-    "add": "Add"
+    "add": "Add",
+    "back": "Back to Event",
+    "save": "Save Changes",
+    "saving": "Saving..."
   },
   "event": {
     "name": "Event Name",
@@ -15,28 +18,73 @@
     "date": "Date",
     "location": "Location",
     "needs": "Things You Need",
-    "invitees": "Invitados",
+    "invitees": "Invitees",
     "create": "Create Event",
-    "manage": "Manage Event",
+    "manage": {
+      "title": "Manage Event - {{eventName}}",
+      "button": "Manage Event",
+      "invitations": "Manage Invites"
+    },
     "invite": "Invite Guests",
     "loading": "Loading events...",
     "hostedBy": "Hosted by {{host}}",
     "myEvents": "My Events",
-    "error": {
-      "loading": "Failed to load events",
-      "create": "Failed to create event"
-    },
-    "loginRequired": "Please log in to view your events",
+    "invitedEvents": "Events I'm Invited To",
     "noEvents": "No upcoming events",
     "createFirst": "Create Your First Event",
     "itemsNeeded": "{{count}} items needed",
     "needPlaceholder": "e.g. Burgers",
-    "cost": "Cost"
+    "cost": "Cost",
+    "noInvitees": "No invitees yet",
+    "delete": "Delete Event",
+    "confirm": {
+      "delete": "Are you sure you want to delete this event? This action cannot be undone."
+    },
+    "success": {
+      "updated": "Event updated successfully!",
+      "deleted": "Event deleted successfully!"
+    },
+    "error": {
+      "loading": "Failed to load events",
+      "create": "Failed to create event",
+      "updateFailed": "Failed to update event.",
+      "deleteFailed": "Failed to delete event."
+    },
+    "loginRequired": "Please log in to view your events",
+    "notFound": "Event not found"
   },
   "guest": {
     "view": "Guest View",
     "accept": "Accept",
     "decline": "Decline",
     "bring": "I'll bring"
+  },
+  "invite": {
+    "title": "Invite Guests to {{eventName}}",
+    "addGuests": "Add Guests",
+    "namePlaceholder": "Name (optional)",
+    "contactPlaceholder": "Email or Phone",
+    "emailReminders": "Email Reminders",
+    "smsReminders": "SMS Reminders",
+    "addGuest": "Add Guest",
+    "guestList": "Guest List",
+    "anonymous": "Anonymous",
+    "remove": "Remove",
+    "sending": "Sending...",
+    "sendInvitations": "Send Invitations",
+    "status": {
+      "pending": "Pending",
+      "sent": "Sent",
+      "accepted": "Accepted",
+      "declined": "Declined"
+    },
+    "error": {
+      "noContact": "Please enter an email or phone number",
+      "invalidEmail": "Please enter a valid email address",
+      "sendFailed": "Failed to send invitations."
+    },
+    "success": {
+      "sent": "Invitations sent successfully!"
+    }
   }
 } 

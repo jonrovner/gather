@@ -14,7 +14,7 @@ interface INeed {
 }
 
 const CreateEvent: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user, isAuthenticated, isLoading, loginWithRedirect } = useAuth0();
   const navigate = useNavigate();
 
@@ -76,6 +76,7 @@ const CreateEvent: React.FC = () => {
           cost: need.cost,
           status: need.status
         })),
+        languagePreference: i18n.language === 'es' ? 'es' : 'en', // Use current i18n language
         token: crypto.randomUUID()
       };
       console.log('Payload:', payload);

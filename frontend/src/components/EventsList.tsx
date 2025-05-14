@@ -25,8 +25,6 @@ interface IEvent {
   }>;
 }
 
-
-
 const EventsList: React.FC = () => {
   const { t } = useTranslation();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth0();
@@ -127,7 +125,7 @@ const EventsList: React.FC = () => {
             to={`/events/${event._id}/manage`}
             className="mt-2 inline-block px-3 py-1 text-sm bg-primary-600 text-white rounded hover:bg-primary-700"
           >
-            {t('event.manage')}
+            {t('event.manage.button')}
           </Link>
         </div>
       </div>
