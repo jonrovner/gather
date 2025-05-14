@@ -31,9 +31,7 @@ interface IEvent {
   invitees: IInvitee[];
 }
 
-
 const ManageEvent: React.FC = () => {
-
   const { user, isAuthenticated, isLoading } = useAuth0();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -42,42 +40,28 @@ const ManageEvent: React.FC = () => {
   const [event, setEvent] = useState<IEvent | null>(null);
   const [isLoadingEvent, setIsLoadingEvent] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Form states
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [date, setDate] = useState('');
-  const [location, setLocation] = useState('');
-  const [needs, setNeeds] = useState<INeed[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [newNeed, setNewNeed] = useState('');
   const [newNeedCost, setNewNeedCost] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchEvent = async () => {
-      console.log('fetchEvent called', { isAuthenticated, userSub: user?.sub, id });
       if (!isAuthenticated || !user?.sub) {
-        console.log('Early return:', { isAuthenticated, userSub: user?.sub, id });
         return;
       }
 
       try {
-        console.log('Making API request to:', `${API_URL}/api/events/${id}`);
         const response = await axios.get(`${API_URL}/api/events/${id}`);
         const eventData = response.data;
-        console.log('API Response:', eventData);
-        // Check if user is the creator
+        
         if (eventData.creator !== user.sub) {
           setError('You are not authorized to manage this event');
           return;
         }
 
         setEvent(eventData);
-        setName(eventData.name);
-        setDescription(eventData.description || '');
-        setDate(new Date(eventData.date).toISOString().slice(0, 16));
-        setLocation(eventData.location);
-        setNeeds(eventData.needs);
+
+        
       } catch (err) {
         console.error('Error fetching event:', err);
         setError('Failed to load event');
@@ -90,74 +74,59 @@ const ManageEvent: React.FC = () => {
   }, [isAuthenticated, user?.sub, id]);
 
   const handleAddNeed = () => {
-    if (newNeed.trim() !== '') {
-      setNeeds([...needs, {
-        _id: crypto.randomUUID(),
-        item: newNeed,
-        cost: newNeedCost ? parseFloat(newNeedCost) : undefined,
-        status: 'claimed',
-        claimedBy: user?.name || user?.email || user?.sub || 'Unknown'
-      }]);
-      setNewNeed('');
-      setNewNeedCost('');
-    }
+    if (!event || !newNeed.trim()) return;
+
+    const updatedNeeds = [...event.needs, {
+      _id: crypto.randomUUID(),
+      item: newNeed,
+      cost: newNeedCost ? parseFloat(newNeedCost) : undefined,
+      status: 'open' as const
+    }];
+
+    setEvent({ ...event, needs: updatedNeeds });
+    setNewNeed('');
+    setNewNeedCost('');
   };
 
   const handleRemoveNeed = (index: number) => {
-    setNeeds(needs.filter((_, i) => i !== index));
-  };
-
-  const handleClaimNeed = (index: number) => {
-    if (!user?.sub) return;
-    const updatedNeeds = [...needs];
-    updatedNeeds[index] = {
-      ...updatedNeeds[index],
-      status: 'claimed',
-      claimedBy: user.name || user.email || user.sub
-    };
-    setNeeds(updatedNeeds);
+    if (!event) return;
+    const updatedNeeds = event.needs.filter((_, i) => i !== index);
+    setEvent({ ...event, needs: updatedNeeds });
   };
 
   const handleUpdateNeedCost = (index: number, cost: string) => {
-    const updatedNeeds = [...needs];
+    if (!event) return;
+    const updatedNeeds = [...event.needs];
     updatedNeeds[index] = {
       ...updatedNeeds[index],
       cost: cost ? parseFloat(cost) : undefined
     };
-    setNeeds(updatedNeeds);
+    setEvent({ ...event, needs: updatedNeeds });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    if (!isAuthenticated || !user || !id) return;
+    if (!isAuthenticated || !user || !id || !event) return;
 
     try {
       const payload = {
-        name,
-        description,
-        date: new Date(date),
-        location,
-        needs: needs.map(need => ({
-          _id: need._id,
-          item: need.item,
-          cost: need.cost,
-          status: need.status,
-          claimedBy: need.claimedBy
-        }))
+        name: event.name,
+        description: event.description,
+        date: event.date,
+        location: event.location,
+        needs: event.needs
       };
 
       const response = await axios.put(`${API_URL}/api/events/${id}`, payload);
-      console.log('response', response);
       if (response.status === 200) {
-        console.log('✅ Event updated:', response.data);
         alert(t('event.success.updated'));
         navigate('/');
       } else {
         alert(t('event.error.updateFailed'));
       }
     } catch (error) {
-      console.error('❌ Error updating event:', error);
+      console.error('Error updating event:', error);
       alert(t('event.error.updateFailed'));
     } finally {
       setIsSubmitting(false);
@@ -251,6 +220,62 @@ const ManageEvent: React.FC = () => {
             onChange={(e) => setEvent({ ...event, location: e.target.value })}
             required
           />
+        </div>
+
+        <div>
+          <label className="block mb-1 text-gray-700 dark:text-gray-300">
+            {t('event.needs')}
+          </label>
+          <div className="flex gap-2 mb-2">
+            <input 
+              className="input flex-grow dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
+              placeholder={t('event.needPlaceholder')} 
+              value={newNeed} 
+              onChange={(e) => setNewNeed(e.target.value)} 
+            />
+            <input 
+              className="input w-24 dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
+              type="number" 
+              placeholder={t('event.cost')} 
+              value={newNeedCost} 
+              onChange={(e) => setNewNeedCost(e.target.value)} 
+            />
+            <button 
+              type="button" 
+              className="btn bg-primary-600 hover:bg-primary-700" 
+              onClick={handleAddNeed}
+            >
+              {t('common.add')}
+            </button>
+          </div>
+          <ul className="space-y-2">
+            {event.needs.map((need, index) => (
+              <li key={index} className="flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-700 rounded">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-700 dark:text-gray-300">
+                    {need.item}
+                  </span>
+                  <input
+                    type="number"
+                    className="input w-24 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    placeholder={t('event.cost')}
+                    value={need.cost || ''}
+                    onChange={(e) => handleUpdateNeedCost(index, e.target.value)}
+                  />
+                  <span className={`ml-2 text-sm ${need.status === 'claimed' ? 'text-green-600' : 'text-yellow-600'}`}>
+                    {need.status === 'claimed' ? t('event.claimed', { by: need.claimedBy }) : t('event.open')}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="text-red-600 hover:text-red-800"
+                  onClick={() => handleRemoveNeed(index)}
+                >
+                  {t('common.remove')}
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
 
         <div className="flex justify-between">

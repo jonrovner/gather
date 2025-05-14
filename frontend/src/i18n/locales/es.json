@@ -10,18 +10,22 @@
     "add": "Añadir",
     "back": "Volver al Evento",
     "save": "Guardar Cambios",
-    "back": "Volver al Evento"
+    "back": "Volver al Evento",
+    "remove": "Eliminar",
+    "error": "Error",
+    "saving": "Guardando...",
+    "loginRequired": "Por favor inicia sesión para continuar"
   },
   "event": {
     "name": "Nombre del Evento",
     "description": "Descripción",
-    "date": "Fecha",
+    "date": "Fecha y Hora",
     "location": "Ubicación",
-    "needs": "Cosas que Necesitas",
+    "needs": "Artículos Necesarios",
     "invitees": "Invitados",
     "create": "Crear Evento",
     "manage": {
-      "title": "Administrar Evento - {{eventName}}",
+      "title": "Gestionar Evento - {{eventName}}",
       "button": "Gestionar Evento",
       "invitations": "Gestionar Invitaciones"
     },
@@ -33,14 +37,25 @@
     "noEvents": "No hay eventos próximos",
     "createFirst": "Crea tu primer evento",
     "itemsNeeded": "{{count}} elementos necesarios",
-    "needPlaceholder": "ej. Hamburguesas",
+    "needPlaceholder": "¿Qué necesitas?",
     "cost": "Costo",
+    "open": "Disponible",
+    "claimed": "Reclamado por {{by}}",
     "notFound": "Evento no encontrado",
+    "noInvitees": "Aún no hay invitados",
+    "delete": "Eliminar Evento",
+    "confirm": {
+      "delete": "¿Estás seguro de que quieres eliminar este evento?"
+    },
+    "success": {
+      "created": "¡Evento creado exitosamente!",
+      "updated": "¡Evento actualizado exitosamente!",
+      "deleted": "¡Evento eliminado exitosamente!"
+    },
     "error": {
-      "loading": "Error al cargar los eventos",
-      "create": "Error al crear el evento",
-      "updateFailed": "Error al actualizar el evento.",
-      "deleteFailed": "Error al eliminar el evento."
+      "createFailed": "Error al crear el evento",
+      "updateFailed": "Error al actualizar el evento",
+      "deleteFailed": "Error al eliminar el evento"
     },
     "loginRequired": "Por favor, inicia sesión para ver tus eventos"
   },
@@ -89,7 +104,7 @@
       "pending": "Pendiente",
       "sent": "Enviado",
       "accepted": "Aceptado",
-      "declined": "Rechazado"
+      "rejected": "Rechazado"
     },
     "error": {
       "noContact": "Por favor ingrese un correo o número de teléfono",
