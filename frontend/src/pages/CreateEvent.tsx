@@ -7,13 +7,7 @@ import EventForms from '../components/EventForms';
 import { EventType } from '../components/EventTypeSelector';
 const API_URL = import.meta.env.VITE_API_URL;
 
-interface INeed {
-  _id: string;
-  item: string;
-  claimedBy?: string;
-  cost?: number;
-  status: 'open' | 'claimed';
-}
+
 
 interface IInvitee {
   name: string;
