@@ -31,13 +31,14 @@ mongoose
   .then(async () => {
     console.log('✅ Connected to MongoDB');
     
-    // Clean only the events collection
-    /* if (mongoose.connection.db) {
+    // Clean the events collection
+    if (mongoose.connection.db) {
       const eventsCollection = mongoose.connection.db.collection('events');
       await eventsCollection.deleteMany({});
       console.log('🧹 Events collection cleaned on server restart');
     }
-     */
+   
+    
     app.listen(PORT, () =>
       console.log(`🌐 Server running at http://localhost:${PORT}`)
     );

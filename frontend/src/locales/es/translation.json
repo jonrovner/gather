@@ -1,0 +1,49 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "add": "Agregar",
+    "home": "Inicio",
+    "createEvent": "Crear Evento",
+    "welcome": "Bienvenido a Gather",
+    "welcomeSubtitle": "Crea y gestiona eventos fácilmente",
+    "dark": "Oscuro",
+    "light": "Claro"
+  },
+  "event": {
+    "create": "Crear Evento",
+    "name": "Nombre del Evento",
+    "description": "Descripción",
+    "location": "Ubicación",
+    "needs": "Necesidades",
+    "needPlaceholder": "¿Qué necesitas?",
+    "cost": "Costo",
+    "loginRequired": "Por favor inicia sesión para crear un evento",
+    "error": {
+      "create": "Error al crear el evento"
+    },
+    "selectType": "¿Qué tipo de evento te gustaría crear?",
+    "types": {
+      "eatParty": "Comida",
+      "eatPartyDescription": "Organiza una reunión alrededor de comida y bebidas",
+      "trip": "Viaje",
+      "tripDescription": "Planifica un viaje o excursión con otros",
+      "professionalMeetup": "Reunión Profesional",
+      "professionalMeetupDescription": "Conecta y comparte conocimientos con colegas",
+      "civicProtest": "Protesta Cívica",
+      "civicProtestDescription": "Organiza una manifestación o concentración"
+    },
+    "foodPreferences": "Preferencias de Comida",
+    "guestCount": "Número de Invitados",
+    "destination": "Destino",
+    "duration": "Duración (días)",
+    "transportation": "Método de Transporte",
+    "industry": "Industria",
+    "agenda": "Agenda",
+    "cause": "Causa",
+    "organizer": "Organizador",
+    "requirements": "Requisitos",
+    "date": "Fecha y Hora",
+    "commonFields": "Información General",
+    "specificFields": "Información Específica del Evento"
+  }
+} 

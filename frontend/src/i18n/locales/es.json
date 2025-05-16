@@ -3,14 +3,13 @@
     "home": "Inicio",
     "createEvent": "Crear Evento",
     "welcome": "Bienvenido a Gather",
-    "welcomeSubtitle": "Crea y gestiona tus eventos con facilidad",
+    "welcomeSubtitle": "Crea y gestiona eventos fácilmente",
     "light": "Claro",
     "dark": "Oscuro",
     "loading": "Cargando...",
-    "add": "Añadir",
+    "add": "Agregar",
     "back": "Volver al Evento",
     "save": "Guardar Cambios",
-    "back": "Volver al Evento",
     "remove": "Eliminar",
     "error": "Error",
     "saving": "Guardando...",
@@ -21,7 +20,7 @@
     "description": "Descripción",
     "date": "Fecha y Hora",
     "location": "Ubicación",
-    "needs": "Artículos Necesarios",
+    "needs": "Necesidades",
     "invitees": "Invitados",
     "create": "Crear Evento",
     "manage": {
@@ -55,9 +54,33 @@
     "error": {
       "createFailed": "Error al crear el evento",
       "updateFailed": "Error al actualizar el evento",
-      "deleteFailed": "Error al eliminar el evento"
+      "deleteFailed": "Error al eliminar el evento",
+      "create": "Error al crear el evento"
     },
-    "loginRequired": "Por favor, inicia sesión para ver tus eventos"
+    "loginRequired": "Por favor, inicia sesión para ver tus eventos",
+    "selectType": "¿Qué tipo de evento te gustaría crear?",
+    "types": {
+      "eatParty": "Comida",
+      "eatPartyDescription": "Organiza una reunión alrededor de comida y bebidas",
+      "trip": "Viaje",
+      "tripDescription": "Planifica un viaje o excursión con otros",
+      "professionalMeetup": "Empresa",
+      "professionalMeetupDescription": "Conecta y comparte conocimientos con colegas",
+      "civicProtest": "Protesta",
+      "civicProtestDescription": "Organiza una manifestación o concentración"
+    },
+    "foodPreferences": "Preferencias de Comida",
+    "guestCount": "Número de Invitados",
+    "destination": "Destino",
+    "duration": "Duración (días)",
+    "transportation": "Método de Transporte",
+    "industry": "Industria",
+    "agenda": "Agenda",
+    "cause": "Causa",
+    "organizer": "Organizador",
+    "requirements": "Requisitos",
+    "commonFields": "Información General",
+    "specificFields": "Información Específica del Evento"
   },
   "guest": {
     "view": "Vista de Invitado",

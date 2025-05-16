@@ -1,20 +1,15 @@
 // backend/routes/eventRoutes.ts
 import { Router, Request, Response } from 'express';
-import { EventModel } from '../models/event.model';
+import { EventModel, IEvent, IEatery, ITrip, IProtest, INeed, IInvitee, IDestination } from '../models/event.model';
 import { v4 as uuidv4 } from 'uuid';
 import mongoose from 'mongoose';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
-import { IInvitee } from '../models/event.model';
+import { log } from 'console';
 dotenv.config();
 
-interface INeed {
-  _id: string;
-  item: string;
-  cost?: number;
-  claimedBy?: string;
-  status: 'open' | 'claimed';
-}
+// Add EventDocument type definition
+type EventDocument = mongoose.Document & IEvent;
 
 const transporter = nodemailer.createTransport({
   host: 'smtp.mailersend.net',
@@ -58,9 +53,14 @@ const emailTemplates: Record<SupportedLanguage, {
 
 const router = Router();
 
+// Add type guards at the top of the file after imports
+function hasNeeds(event: IEvent): event is IEatery | ITrip | IProtest {
+  return 'needs' in event;
+}
 
 // Create Event
 router.post('/', async (req: Request, res: Response) => {
+  console.log('req.body', req.body);
   try {
     const {
       name,
@@ -69,32 +69,120 @@ router.post('/', async (req: Request, res: Response) => {
       location,
       creator,
       hostName,
+      eventType,
       needs = [],
       reminderMethod,
       languagePreference = 'en', // Default to English if not specified
+      // Type-specific fields
+      destinations = [],
+      dresscode,
+      agenda,
+      manifesto,
     } = req.body;
 
-    const newEvent = new EventModel({
+    // Validate required fields
+    if (!name || !date || !location || !creator || !hostName || !eventType) {
+      res.status(400).json({ 
+        message: 'Missing required fields',
+        required: ['name', 'date', 'location', 'creator', 'hostName', 'eventType']
+      });
+      return;
+    }
+
+    // Validate event type and its required fields
+    switch (eventType) {
+      case 'trip':
+        if (!Array.isArray(destinations) || destinations.length === 0) {
+          res.status(400).json({ 
+            message: 'Trip events require at least one destination',
+            required: ['destinations']
+          });
+          return;
+        }
+        // Validate each destination has required fields
+        for (const dest of destinations) {
+          if (!dest.name || !dest.arrivalDate || !dest.departureDate || !dest.accommodation) {
+            res.status(400).json({ 
+              message: 'Each destination must have name, arrival date, departure date, and accommodation',
+              required: ['name', 'arrivalDate', 'departureDate', 'accommodation']
+            });
+            return;
+          }
+        }
+        break;
+      case 'bizmeet':
+        if (!dresscode || !agenda) {
+          res.status(400).json({ 
+            message: 'Business meeting events require dresscode and agenda',
+            required: ['dresscode', 'agenda']
+          });
+          return;
+        }
+        break;
+      case 'protest':
+        if (!manifesto) {
+          res.status(400).json({ 
+            message: 'Protest events require a manifesto',
+            required: ['manifesto']
+          });
+          return;
+        }
+        break;
+      case 'eatery':
+        // No additional required fields for eatery events
+        break;
+      default:
+        res.status(400).json({ 
+          message: 'Invalid event type',
+          validTypes: ['eatery', 'trip', 'bizmeet', 'protest']
+        });
+        return;
+    }
+
+    const baseEvent = {
       name,
       description,
       date,
       location,
       creator,
       hostName,
+      eventType,
       needs: needs.map((need: Omit<INeed, '_id'>) => ({ 
         ...need, 
         _id: uuidv4(),
         status: 'open'
       })),
-      invitees: [], // Initialize with empty array
+      invitees: [], // Initialize with empty array since invitees will be added later
       reminderMethod,
       languagePreference,
-    });
+    };
 
+    // Add type-specific fields
+    const eventData = {
+      ...baseEvent,
+      ...(eventType === 'trip' && { 
+        destinations: destinations.map((dest: Omit<IDestination, '_id'>) => ({
+          ...dest,
+          _id: uuidv4()
+        }))
+      }),
+      ...(eventType === 'bizmeet' && { dresscode, agenda }),
+      ...(eventType === 'protest' && { manifesto }),
+    };
+    console.log('eventData', eventData);
+    
+    const newEvent = new EventModel(eventData);
     await newEvent.save();
     res.status(201).json(newEvent);
-  } catch (err) {
+  } catch (err: unknown) {
     console.error('Error creating event:', err);
+    if (err instanceof mongoose.Error.ValidationError) {
+      res.status(400).json({ 
+        message: 'Validation error',
+        errors: Object.values(err.errors).map(e => e.message)
+      });
+      return;
+    }
     res.status(500).json({ 
       message: 'Failed to create event',
       error: err instanceof Error ? err.message : 'Unknown error'
@@ -206,11 +294,13 @@ router.post<{ id: string }>('/:id/invite', async (req: Request<{ id: string }>, 
     }
 
     // Generate tokens for new invitees
-    const newInvitees = invitees.map(invitee => ({
-      ...invitee,
+    const newInvitees: IInvitee[] = invitees.map(invitee => ({
+      name: invitee.name,
+      emailOrPhone: invitee.emailOrPhone,
       token: uuidv4(),
-      claimedItems: [],
-      invitation: 'sent'
+      invitation: 'sent' as const,
+      reminderPreference: invitee.reminderPreference || 'email',
+      claimedItems: []
     }));
 
     // Add new invitees to the event
@@ -219,11 +309,11 @@ router.post<{ id: string }>('/:id/invite', async (req: Request<{ id: string }>, 
 
     // Send emails to all new invitees
     for (const invitee of newInvitees) {
-      if (invitee.emailOrPhone && invitee.reminderPreference === 'email') {
+      if (invitee.emailOrPhone && invitee.reminderPreference === 'email' && invitee.token) {
         const encodedToken = encodeURIComponent(invitee.token);
         const invitationUrl = `${process.env.CORS_ORIGIN}/event/guest/${encodedToken}`;
-        const language = event.languagePreference;
-        const template = emailTemplates[language];
+        const language = event.languagePreference || 'en';
+        const template = emailTemplates[language as SupportedLanguage];
         const formattedDate = event.date.toLocaleDateString(language === 'en' ? 'en-US' : 'es-ES', {
           weekday: 'long',
           year: 'numeric',
@@ -282,13 +372,13 @@ router.put<{ token: string }>('/invitee/:token/accept', async (req: Request<{ to
       return;
     }
 
-    const event = await EventModel.findOne({ 'invitees.token': token });
+    const event = await EventModel.findOne({ 'invitees.token': token }) as EventDocument;
     if (!event) {
       res.status(404).json({ message: 'Event not found' });
       return;
     }
 
-    const invitee = event.invitees.find(i => i.token === token);
+    const invitee = event.invitees.find((i: IInvitee) => i.token === token);
     if (!invitee) {
       res.status(404).json({ message: 'Invitee not found' });
       return;
@@ -309,19 +399,24 @@ router.put<{ token: string; needId: string }>('/invitee/:token/needs/:needId/cla
   try {
     const { token, needId } = req.params;
 
-    const event = await EventModel.findOne({ 'invitees.token': token });
+    const event = await EventModel.findOne({ 'invitees.token': token }) as EventDocument;
     if (!event) {
       res.status(404).json({ message: 'Event not found' });
       return;
     }
 
-    const invitee = event.invitees.find(i => i.token === token);
+    if (!hasNeeds(event)) {
+      res.status(400).json({ message: 'This event type does not support needs' });
+      return;
+    }
+
+    const invitee = event.invitees.find((i: IInvitee) => i.token === token);
     if (!invitee) {
       res.status(404).json({ message: 'Invitee not found' });
       return;
     }
 
-    const need = event.needs.find(n => n._id.toString() === needId);
+    const need = event.needs.find((n: INeed) => n._id.toString() === needId);
     if (!need) {
       res.status(404).json({ message: 'Need not found' });
       return;
@@ -350,6 +445,7 @@ router.put<{ token: string; needId: string }>('/invitee/:token/needs/:needId/cla
   }
 });
 
+
 // Update Event
 router.put<{ id: string }>('/:id', async (req: Request<{ id: string }>, res: Response) => {
   try {
@@ -361,7 +457,7 @@ router.put<{ id: string }>('/:id', async (req: Request<{ id: string }>, res: Res
       needs,
     } = req.body;
 
-    const event = await EventModel.findById(req.params.id);
+    const event = await EventModel.findById(req.params.id) as EventDocument;
     
     if (!event) {
       res.status(404).json({ message: 'Event not found' });
@@ -373,7 +469,10 @@ router.put<{ id: string }>('/:id', async (req: Request<{ id: string }>, res: Res
     event.description = description;
     event.date = date;
     event.location = location;
-    event.needs = needs;
+    
+    if (hasNeeds(event)) {
+      event.needs = needs;
+    }
 
     await event.save();
     res.status(200).json(event);
@@ -391,15 +490,20 @@ router.put<{ id: string }>('/:id', async (req: Request<{ id: string }>, res: Res
 router.put<{ id: string; needId: string }>('/:id/needs/:needId/claim', async (req: Request<{ id: string; needId: string }>, res: Response) => {
   try {
     const { id, needId } = req.params;
-    const { claimedBy } = req.body; // Optional: who is claiming the need
+    const { claimedBy } = req.body;
 
-    const event = await EventModel.findById(id);
+    const event = await EventModel.findById(id) as EventDocument;
     if (!event) {
       res.status(404).json({ message: 'Event not found' });
       return;
     }
 
-    const need = event.needs.find(n => n._id.toString() === needId);
+    if (!hasNeeds(event)) {
+      res.status(400).json({ message: 'This event type does not support needs' });
+      return;
+    }
+
+    const need = event.needs.find((n: INeed) => n._id.toString() === needId);
     if (!need) {
       res.status(404).json({ message: 'Need not found' });
       return;
@@ -429,13 +533,18 @@ router.put<{ id: string; needId: string }>('/:id/needs/:needId/cost', async (req
     const { id, needId } = req.params;
     const { cost } = req.body;  
 
-    const event = await EventModel.findById(id);
+    const event = await EventModel.findById(id) as EventDocument;
     if (!event) {
       res.status(404).json({ message: 'Event not found' });
       return;
     } 
 
-    const need = event.needs.find(n => n._id.toString() === needId);
+    if (!hasNeeds(event)) {
+      res.status(400).json({ message: 'This event type does not support needs' });
+      return;
+    }
+
+    const need = event.needs.find((n: INeed) => n._id.toString() === needId);
     if (!need) {
       res.status(404).json({ message: 'Need not found' });
       return;

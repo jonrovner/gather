@@ -1,0 +1,49 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "add": "Add",
+    "home": "Home",
+    "createEvent": "Create Event",
+    "welcome": "Welcome to Gather",
+    "welcomeSubtitle": "Create and manage events with ease",
+    "dark": "Dark",
+    "light": "Light"
+  },
+  "event": {
+    "create": "Create Event",
+    "name": "Event Name",
+    "description": "Description",
+    "location": "Location",
+    "needs": "Needs",
+    "needPlaceholder": "What do you need?",
+    "cost": "Cost",
+    "loginRequired": "Please log in to create an event",
+    "error": {
+      "create": "Error creating event"
+    },
+    "selectType": "What type of event would you like to create?",
+    "types": {
+      "eatParty": "Eat Party",
+      "eatPartyDescription": "Organize a gathering around food and drinks",
+      "trip": "Trip",
+      "tripDescription": "Plan a journey or excursion with others",
+      "professionalMeetup": "Professional Meetup",
+      "professionalMeetupDescription": "Network and share knowledge with peers",
+      "civicProtest": "Civic Protest",
+      "civicProtestDescription": "Organize a demonstration or rally"
+    },
+    "foodPreferences": "Food Preferences",
+    "guestCount": "Number of Guests",
+    "destination": "Destination",
+    "duration": "Duration (days)",
+    "transportation": "Transportation Method",
+    "industry": "Industry",
+    "agenda": "Agenda",
+    "cause": "Cause",
+    "organizer": "Organizer",
+    "requirements": "Requirements",
+    "date": "Date and Time",
+    "commonFields": "Common Information",
+    "specificFields": "Event Specific Information"
+  }
+} 

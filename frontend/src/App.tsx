@@ -3,6 +3,7 @@ import { Auth0Provider, useAuth0 } from '@auth0/auth0-react'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import CreateEvent from './pages/CreateEvent'
+import EventTypeSelector from './components/EventTypeSelector'
 import InviteGuests from './pages/InviteGuests'
 import EventGuestView from './pages/EventGuestView'
 import EventsList from './components/EventsList'
@@ -110,7 +111,8 @@ const App: React.FC = () => {
                   <EventsList />
                 </div>
               } />
-              <Route path="/create-event" element={<CreateEvent />} />
+              <Route path="/create-event" element={<EventTypeSelector />} />
+              <Route path="/create-event/:type" element={<CreateEvent />} />
               <Route path="/events/:id/invite" element={<InviteGuests />} />
               <Route path="/events/:id/manage" element={<ManageEvent />} />
               <Route path="/event/guest/:token" element={<EventGuestView />} />
