@@ -160,7 +160,7 @@ const EventGuestView: React.FC = () => {
     return (
       <div className="max-w-xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
         <div className="mb-4 text-gray-600 dark:text-gray-400">
-          Logged in as: {event.invitee.name}
+          Invited name: {event.invitee.name}
         </div>
         <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">{event.name}</h2>
         
@@ -257,7 +257,7 @@ const EventGuestView: React.FC = () => {
                 ) : (
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-600 dark:text-gray-400">
-                      Claimed by {need.claimedBy}
+                      Claimed 
                     </span>
                     {need.claimedBy === event.invitee.name && !need.actualCost && (
                       <div className="flex items-center gap-2">

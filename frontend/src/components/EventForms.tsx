@@ -79,16 +79,10 @@ const NeedsInput: React.FC<{ needs: INeed[], onNeedsChange: (needs: INeed[]) => 
 };
 
 const EateryForm: React.FC<EventFormProps> = ({ formData, onFormChange }) => {
-  const { t } = useTranslation();
+  
   return (
     <div className="space-y-4">
-      <input
-        className="input dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-        type="number"
-        placeholder={t('event.guestCount')}
-        value={formData.guestCount || ''}
-        onChange={(e) => onFormChange('guestCount', e.target.value)}
-      />
+      
       <NeedsInput 
         needs={formData.needs || []} 
         onNeedsChange={(needs) => onFormChange('needs', needs)} 
@@ -130,11 +124,11 @@ const TripForm: React.FC<EventFormProps> = ({ formData, onFormChange }) => {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <label className="block text-gray-700 dark:text-gray-300">{t('event.destinations')}</label>
+        <label className="block text-gray-700 dark:text-gray-300">{t('event.destination')}</label>
         <div className="grid grid-cols-1 gap-2">
           <input
             className="input dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-            placeholder={t('event.destinationName')}
+            placeholder={t('event.destinationName') }
             value={newDestination.name}
             onChange={(e) => setNewDestination({ ...newDestination, name: e.target.value })}
           />

@@ -27,7 +27,7 @@ interface IEvent {
 
 const EventsList: React.FC = () => {
   const { t } = useTranslation();
-  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth0();
+  const { user, isAuthenticated, isLoading: isAuthLoading, getAccessTokenSilently } = useAuth0();
   const [createdEvents, setCreatedEvents] = useState<IEvent[]>([]);
   const [invitedEvents, setInvitedEvents] = useState<IEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,15 +41,20 @@ const EventsList: React.FC = () => {
       }
 
       try {
+        const token = await getAccessTokenSilently();
         // Fetch created events
         const createdResponse = await axios.get(`${API_URL}/api/events`, {
-          params: {
-            creator: user.sub
+          headers: {
+            Authorization: `Bearer ${token}`
           }
         });
 
         // Fetch all events and filter for invited ones
-        const allEventsResponse = await axios.get(`${API_URL}/api/events`);
+        const allEventsResponse = await axios.get(`${API_URL}/api/events`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
         const invitedEvents = allEventsResponse.data.filter((event: IEvent) => 
           event.creator !== user.sub && 
           event.invitees.some((invitee: { emailOrPhone: string }) => invitee.emailOrPhone === user.email)

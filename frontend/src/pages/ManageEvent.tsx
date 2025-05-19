@@ -44,6 +44,19 @@ const ManageEvent: React.FC = () => {
   const [newNeed, setNewNeed] = useState('');
   const [newNeedCost, setNewNeedCost] = useState('');
 
+  const getUserDisplayName = (userId: string) => {
+    if (userId === user?.sub) {
+      return t('event.host');
+    }
+    // If we have the user's name in the invitees list, use that
+    const invitee = event?.invitees.find(inv => inv.emailOrPhone === userId);
+    if (invitee?.name) {
+      return invitee.name;
+    }
+    // Otherwise return a generic identifier
+    return t('event.someone');
+  };
+
   useEffect(() => {
     const fetchEvent = async () => {
       if (!isAuthenticated || !user?.sub) {
@@ -100,6 +113,17 @@ const ManageEvent: React.FC = () => {
     updatedNeeds[index] = {
       ...updatedNeeds[index],
       cost: cost ? parseFloat(cost) : undefined
+    };
+    setEvent({ ...event, needs: updatedNeeds });
+  };
+
+  const handleClaimNeed = (index: number) => {
+    if (!event || !user?.sub) return;
+    const updatedNeeds = [...event.needs];
+    updatedNeeds[index] = {
+      ...updatedNeeds[index],
+      status: 'claimed' as const,
+      claimedBy: user.sub
     };
     setEvent({ ...event, needs: updatedNeeds });
   };
@@ -263,16 +287,27 @@ const ManageEvent: React.FC = () => {
                     onChange={(e) => handleUpdateNeedCost(index, e.target.value)}
                   />
                   <span className={`ml-2 text-sm ${need.status === 'claimed' ? 'text-green-600' : 'text-yellow-600'}`}>
-                    {need.status === 'claimed' ? t('event.claimed', { by: need.claimedBy }) : t('event.open')}
+                    {need.status === 'claimed' ? t('event.claimed', { by: getUserDisplayName(need.claimedBy || '') }) : t('event.open')}
                   </span>
                 </div>
-                <button
-                  type="button"
-                  className="text-red-600 hover:text-red-800"
-                  onClick={() => handleRemoveNeed(index)}
-                >
-                  {t('common.remove')}
-                </button>
+                <div className="flex gap-2">
+                  {need.status === 'open' && (
+                    <button
+                      type="button"
+                      className="text-green-600 hover:text-green-800"
+                      onClick={() => handleClaimNeed(index)}
+                    >
+                      {t('event.claim')}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="text-red-600 hover:text-red-800"
+                    onClick={() => handleRemoveNeed(index)}
+                  >
+                    {t('common.remove')}
+                  </button>
+                </div>
               </li>
             ))}
           </ul>

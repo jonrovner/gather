@@ -5,8 +5,15 @@ import { v4 as uuidv4 } from 'uuid';
 import mongoose from 'mongoose';
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
-import { log } from 'console';
+import { auth } from 'express-oauth2-jwt-bearer';
+
 dotenv.config();
+
+const checkJwt = auth({
+  audience: process.env.AUTH0_AUDIENCE,
+  issuerBaseURL: process.env.AUTH0_ISSUER_BASE_URL,
+  tokenSigningAlg: 'RS256'
+});
 
 // Add EventDocument type definition
 type EventDocument = mongoose.Document & IEvent;
@@ -191,15 +198,24 @@ router.post('/', async (req: Request, res: Response) => {
 });
 
 // Get All Events (for dev/testing)
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', checkJwt, async (req: Request, res: Response) => {
   try {
-    const { creator } = req.query;
+    const userId = req.auth?.payload.sub;
+    if (!userId) {
+      res.status(401).json({ message: 'User ID not found in token' });
+      return;
+    }
+    const query = { creator: userId };
+
+  /* const { creator } = req.query;
     let query = {};
     
-    if (creator) {
-      query = { creator };
-    }
-    
+      if (creator) {
+        query = { creator };
+      }
+    */ 
+
+
     const events = await EventModel.find(query);
     //console.log('events', events);
     
@@ -303,8 +319,10 @@ router.post<{ id: string }>('/:id/invite', async (req: Request<{ id: string }>, 
       claimedItems: []
     }));
 
+    const filteredInvitees = newInvitees.filter(invitee => !event.invitees.some(i => i.emailOrPhone === invitee.emailOrPhone));
+
     // Add new invitees to the event
-    event.invitees = [...event.invitees, ...newInvitees];
+    event.invitees = [...event.invitees, ...filteredInvitees];
     await event.save();
 
     // Send emails to all new invitees
@@ -363,11 +381,12 @@ router.post<{ id: string }>('/:id/invite', async (req: Request<{ id: string }>, 
 
 // Accept Invitation
 router.put<{ token: string }>('/invitee/:token/accept', async (req: Request<{ token: string }>, res: Response) => {
+  console.log('req.body', req.body);
   try {
     const { token } = req.params;
-    const { status } = req.body;
+    const { hasAccepted } = req.body;
 
-    if (!['accepted', 'rejected'].includes(status)) {
+    if (!hasAccepted) {
       res.status(400).json({ message: 'Invalid invitation status' });
       return;
     }
@@ -384,10 +403,10 @@ router.put<{ token: string }>('/invitee/:token/accept', async (req: Request<{ to
       return;
     }
 
-    invitee.invitation = status;
+    invitee.invitation = hasAccepted ? 'accepted' : 'rejected';
     await event.save();
 
-    res.status(200).json({ message: `Invitation ${status} successfully` });
+    res.status(200).json({ message: `Invitation accepted successfully` });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Failed to update invitation status' });

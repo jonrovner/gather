@@ -4,10 +4,11 @@
     "add": "Add",
     "home": "Home",
     "createEvent": "Create Event",
-    "welcome": "Welcome to Gather",
+    "welcome": "Welcome to Juntadita",
     "welcomeSubtitle": "Create and manage events with ease",
     "dark": "Dark",
-    "light": "Light"
+    "light": "Light",
+    "remove": "Remove"
   },
   "event": {
     "create": "Create Event",
@@ -44,6 +45,17 @@
     "requirements": "Requirements",
     "date": "Date and Time",
     "commonFields": "Common Information",
-    "specificFields": "Event Specific Information"
+    "specificFields": "Event Specific Information",
+    "destinations": "Add Destination",
+    "destinationName": "Destination Name",
+    "arrivalDate": "Arrival Date",
+    "departureDate": "Departure Date",
+    "accommodation": "Accommodation",
+    "destinationsList": "Destinations List",
+    "arrival": "Arrival",
+    "departure": "Departure",
+    "dresscode": "Dress Code",
+    "manifesto": "Manifesto",
+    "remove": "Remove"
   }
 } 

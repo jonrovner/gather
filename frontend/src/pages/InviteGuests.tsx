@@ -75,6 +75,15 @@ const InviteGuests: React.FC = () => {
       }
     }
 
+    // Check for duplicate invitees against all event invitees
+    const isDuplicate = event?.invitees.some(
+      invitee => invitee.emailOrPhone.toLowerCase() === newInvitee.emailOrPhone.toLowerCase()
+    );
+    if (isDuplicate) {
+      alert(t('invite.error.duplicateContact'));
+      return;
+    }
+
     setInvitees([...invitees, newInvitee]);
     setNewInvitee({
       name: '',

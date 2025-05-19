@@ -37,6 +37,22 @@ const CreateEvent: React.FC = () => {
   const navigate = useNavigate();
   const { type } = useParams<{ type: EventType }>();
 
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [date, setDate] = useState(() => {
+    const now = new Date();
+    // Format date to YYYY-MM-DDThh:mm for datetime-local input
+    return now.toISOString().slice(0, 16);
+  });
+  const [location, setLocation] = useState('');
+  const [eventTypeData, setEventTypeData] = useState<any>(() => {
+    // Initialize with empty needs array for event types that support needs
+    if (type && ['eatery', 'trip', 'protest'].includes(type)) {
+      return { needs: [] };
+    }
+    return {};
+  });
+
   // Validate event type
   useEffect(() => {
     if (type && !['eatery', 'trip', 'bizmeet', 'protest'].includes(type)) {
@@ -50,6 +66,10 @@ const CreateEvent: React.FC = () => {
       loginWithRedirect();
     }
   }, [isLoading, isAuthenticated, navigate, loginWithRedirect]);
+
+  const handleEventTypeDataChange = (field: string, value: any) => {
+    setEventTypeData((prev: any) => ({ ...prev, [field]: value }));
+  };
 
   // Show loading state while checking authentication
   if (isLoading) {
@@ -66,22 +86,6 @@ const CreateEvent: React.FC = () => {
     navigate('/create-event');
     return null;
   }
-
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [date, setDate] = useState('');
-  const [location, setLocation] = useState('');
-  const [eventTypeData, setEventTypeData] = useState<any>(() => {
-    // Initialize with empty needs array for event types that support needs
-    if (type && ['eatery', 'trip', 'protest'].includes(type)) {
-      return { needs: [] };
-    }
-    return {};
-  });
-  
-  const handleEventTypeDataChange = (field: string, value: any) => {
-    setEventTypeData((prev: any) => ({ ...prev, [field]: value }));
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,7 +127,9 @@ const CreateEvent: React.FC = () => {
 
   return (
     <div className="max-w-xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
-      <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">{t('event.create')}</h2>
+      <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">
+        {t(`event.create.${type}`)}
+      </h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input 
           className="input dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
@@ -143,6 +149,7 @@ const CreateEvent: React.FC = () => {
           type="datetime-local" 
           value={date} 
           onChange={(e) => setDate(e.target.value)} 
+          min={new Date().toISOString().slice(0, 16)}
           required 
         />
         <input 

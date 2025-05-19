@@ -4,10 +4,11 @@
     "add": "Agregar",
     "home": "Inicio",
     "createEvent": "Crear Evento",
-    "welcome": "Bienvenido a Gather",
+    "welcome": "Bienvenido a Juntadita",
     "welcomeSubtitle": "Crea y gestiona eventos fácilmente",
     "dark": "Oscuro",
-    "light": "Claro"
+    "light": "Claro",
+    "remove": "Eliminar"
   },
   "event": {
     "create": "Crear Evento",
@@ -35,6 +36,10 @@
     "foodPreferences": "Preferencias de Comida",
     "guestCount": "Número de Invitados",
     "destination": "Destino",
+    "destinationName": "Nombre del Destino",
+    "arrivalDate": "Fecha de Llegada",
+    "departureDate": "Fecha de Salida",
+    "accommodation": "Alojamiento",
     "duration": "Duración (días)",
     "transportation": "Método de Transporte",
     "industry": "Industria",

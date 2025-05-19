@@ -22,7 +22,7 @@ export interface IInvitee {
   emailOrPhone: string;
   invitation: 'pending' | 'sent' | 'accepted' | 'rejected';
   reminderPreference?: 'email' | 'sms';
-  token?: string | null; // Make token optional and allow null
+  token?: string; 
   claimedItems?: string[]; // array of need._id that this invitee has claimed
 }
 
@@ -85,10 +85,9 @@ const InviteeSchema = new Schema<IInvitee>({
   emailOrPhone: { type: String, required: true },
   invitation: { type: String, enum: ['pending', 'sent', 'accepted', 'rejected'], default: 'pending' },
   reminderPreference: { type: String, enum: ['email', 'sms'] },
-  token: { type: String, unique: true }, 
+  token: { type: String, unique: true, sparse: true }, 
   claimedItems: [{ type: String }], // array of need._id
 });
-
 
 const EventSchema = new Schema<IEvent>(
   {
