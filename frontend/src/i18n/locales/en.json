@@ -29,7 +29,7 @@
     "create.bizmeet": "Create Professional Meetup",
     "create.protest": "Create Protest",
     "claim": "Claim",
-    "host": "host",
+    "host": "Host",
     "someone": "Someone",
     "manage": {
       "title": "Manage Event - {{eventName}}",
@@ -51,6 +51,7 @@
     "confirm": {
       "delete": "Are you sure you want to delete this event?"
     },
+    "splitBill": "Split Bill",
     "success": {
       "created": "Event created successfully!",
       "updated": "Event updated successfully!",
@@ -98,7 +99,9 @@
     "organizer": "Organizer",
     "requirements": "Requirements",
     "commonFields": "Common Information",
-    "specificFields": "Event Specific Information"
+    "specificFields": "Event Specific Information",
+    "unauthorized": "You are not authorized to manage this event",
+    "loadFailed": "Failed to load event"
   },
   "guest": {
     "view": "Guest View",
@@ -132,6 +135,28 @@
     },
     "success": {
       "sent": "Invitations sent successfully!"
+    }
+  },
+  "billSplit": {
+    "title": "Bill Split - {{eventName}}",
+    "person": "Person",
+    "paid": "Paid",
+    "owes": "Owes",
+    "balance": "Balance",
+    "include": "Include",
+    "actions": "Actions",
+    "included": "Included",
+    "excluded": "Excluded",
+    "total": "Total",
+    "requestPayment": "Request Payment",
+    "sending": "Sending...",
+    "error": {
+      "missingContact": "Missing contact information for this person",
+      "noEmail": "No email address available",
+      "paymentRequestFailed": "Failed to send payment request"
+    },
+    "success": {
+      "paymentRequestSent": "Payment request sent successfully"
     }
   }
 } 

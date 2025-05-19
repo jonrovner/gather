@@ -32,7 +32,7 @@ interface IEvent {
 }
 
 const ManageEvent: React.FC = () => {
-  const { user, isAuthenticated, isLoading } = useAuth0();
+  const { user, isAuthenticated, isLoading, getAccessTokenSilently } = useAuth0();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -62,9 +62,14 @@ const ManageEvent: React.FC = () => {
       if (!isAuthenticated || !user?.sub) {
         return;
       }
-
+      console.log('user.access_token', user.access_token);
       try {
-        const response = await axios.get(`${API_URL}/api/events/${id}`);
+        const token = await getAccessTokenSilently();
+        const response = await axios.get(`${API_URL}/api/events/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
         const eventData = response.data;
         
         if (eventData.creator !== user.sub) {
@@ -329,6 +334,14 @@ const ManageEvent: React.FC = () => {
               onClick={() => navigate(`/events/${id}/invite`)}
             >
               {t('event.manage.invitations')}
+            </button>
+
+            <button
+              type="button"
+              className="btn bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => navigate(`/events/${id}/bill-split`)}
+            >
+              {t('event.splitBill')}
             </button>
 
             <button

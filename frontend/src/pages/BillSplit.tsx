@@ -36,13 +36,12 @@ interface IBillSplit {
   paid: number;
   owes: number;
   balance: number;
-  isIncluded: boolean;
   emailOrPhone?: string;
 }
 
 const BillSplit: React.FC = () => {
   const { t } = useTranslation();
-  const { user, isAuthenticated } = useAuth0();
+  const { user, isAuthenticated, getAccessTokenSilently } = useAuth0();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
@@ -55,13 +54,19 @@ const BillSplit: React.FC = () => {
   useEffect(() => {
     const fetchEvent = async () => {
       if (!isAuthenticated || !user?.sub || !id) return;
-
+      const token = await getAccessTokenSilently();
       try {
-        const response = await axios.get(`${API_URL}/api/events/${id}`);
+        const response = await axios.get(`${API_URL}/api/events/${id}`,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
         const eventData = response.data;
         
         if (eventData.creator !== user.sub) {
-          setError('You are not authorized to manage this event');
+          setError(t('event.unauthorized'));
           return;
         }
 
@@ -69,69 +74,68 @@ const BillSplit: React.FC = () => {
         calculateBillSplit(eventData);
       } catch (err) {
         console.error('Error fetching event:', err);
-        setError('Failed to load event');
+        setError(t('event.loadFailed'));
       } finally {
         setIsLoading(false);
+        
       }
     };
 
     fetchEvent();
-  }, [isAuthenticated, user?.sub, id]);
+  }, [isAuthenticated, user?.sub, id, t]);
+
+
+  useEffect(() => {
+    console.log('event', event);
+    if (event && event?.needs?.length > 0) {
+      calculateBillSplit(event);
+    }
+  }, [event]);  
 
   const calculateBillSplit = (eventData: IEvent) => {
     const totalCost = eventData.needs.reduce((sum, need) => sum + (need.cost || 0), 0);
-    console.log('totalCost', totalCost);
-    const includedPeople = billSplit.filter(split => split.isIncluded).length;
-    console.log('includedPeople', includedPeople);
-    const perPersonShare = includedPeople > 0 ? totalCost / includedPeople : 0;
-    console.log('perPersonShare', perPersonShare);
+    
+    // Create initial split array
     const split: IBillSplit[] = [];
 
     // Add host
     const hostPaid = eventData.needs
-      .filter(need => need.claimedBy === user?.name || need.claimedBy === user?.email)
+      .filter(need => need.claimedBy === user?.sub)
       .reduce((sum, need) => sum + (need.cost || 0), 0);
     
     split.push({
-      person: user?.name || 'Host',
+      person: user?.name || t('event.host'),
       paid: hostPaid,
-      owes: perPersonShare,
-      balance: hostPaid - perPersonShare,
-      isIncluded: true,
+      owes: 0,
+      balance: 0,
       emailOrPhone: user?.email
     });
 
     // Add invitees
     eventData.invitees.forEach(invitee => {
-      if (invitee.hasAccepted) {
-        const inviteePaid = eventData.needs
-          .filter(need => need.claimedBy === invitee.name)
-          .reduce((sum, need) => sum + (need.cost || 0), 0);
+      const inviteePaid = eventData.needs
+        .filter(need => need.claimedBy === invitee.name)
+        .reduce((sum, need) => sum + (need.cost || 0), 0);
 
-        split.push({
-          person: invitee.name,
-          paid: inviteePaid,
-          owes: perPersonShare,
-          balance: inviteePaid - perPersonShare,
-          isIncluded: true,
-          emailOrPhone: invitee.emailOrPhone
-        });
-      }
+      split.push({
+        person: invitee.name,
+        paid: inviteePaid,
+        owes: 0,
+        balance: 0,
+        emailOrPhone: invitee.emailOrPhone
+      });
+    });
+
+    // Calculate per person share
+    const perPersonShare = split.length > 0 ? totalCost / split.length : 0;
+
+    // Update owes and balance for each person
+    split.forEach(person => {
+      person.owes = perPersonShare;
+      person.balance = person.paid - perPersonShare;
     });
 
     setBillSplit(split);
-  };
-
-  const togglePersonIncluded = (index: number) => {
-    const updatedSplit = [...billSplit];
-    updatedSplit[index] = {
-      ...updatedSplit[index],
-      isIncluded: !updatedSplit[index].isIncluded
-    };
-    setBillSplit(updatedSplit);
-    if (event) {
-      calculateBillSplit(event);
-    }
   };
 
   const handleSendPaymentRequest = async (person: string, amount: number, emailOrPhone?: string) => {
@@ -189,17 +193,16 @@ const BillSplit: React.FC = () => {
       </div>
 
       <div className="space-y-4">
-        <div className="grid grid-cols-6 gap-2 font-semibold text-sm">
+        <div className="grid grid-cols-5 gap-2 font-semibold text-sm">
           <div>{t('billSplit.person')}</div>
           <div className="text-right">{t('billSplit.paid')}</div>
           <div className="text-right">{t('billSplit.owes')}</div>
           <div className="text-right">{t('billSplit.balance')}</div>
-          <div className="text-center">{t('billSplit.include')}</div>
           <div className="text-center">{t('billSplit.actions')}</div>
         </div>
 
         {billSplit.map((split, index) => (
-          <div key={index} className="grid grid-cols-6 gap-2 text-sm items-center">
+          <div key={index} className="grid grid-cols-5 gap-2 text-sm items-center">
             <div>{split.person}</div>
             <div className="text-right">${split.paid.toFixed(2)}</div>
             <div className="text-right">${split.owes.toFixed(2)}</div>
@@ -207,19 +210,7 @@ const BillSplit: React.FC = () => {
               ${split.balance.toFixed(2)}
             </div>
             <div className="flex justify-center">
-              <button
-                onClick={() => togglePersonIncluded(index)}
-                className={`px-3 py-1 rounded ${
-                  split.isIncluded 
-                    ? 'bg-green-600 hover:bg-green-700' 
-                    : 'bg-red-600 hover:bg-red-700'
-                } text-white`}
-              >
-                {split.isIncluded ? t('billSplit.included') : t('billSplit.excluded')}
-              </button>
-            </div>
-            <div className="flex justify-center">
-              {split.balance < 0 && split.isIncluded && (
+              {split.balance < 0 && (
                 <button
                   onClick={() => handleSendPaymentRequest(
                     split.person,
@@ -238,18 +229,17 @@ const BillSplit: React.FC = () => {
         ))}
 
         <div className="border-t pt-2 mt-2">
-          <div className="grid grid-cols-6 gap-2 font-semibold">
+          <div className="grid grid-cols-5 gap-2 font-semibold">
             <div>{t('billSplit.total')}</div>
             <div className="text-right">
               ${billSplit.reduce((sum, split) => sum + split.paid, 0).toFixed(2)}
             </div>
             <div className="text-right">
-              ${billSplit.reduce((sum, split) => sum + (split.isIncluded ? split.owes : 0), 0).toFixed(2)}
+              ${billSplit.reduce((sum, split) => sum + split.owes, 0).toFixed(2)}
             </div>
             <div className="text-right">
-              ${billSplit.reduce((sum, split) => sum + (split.isIncluded ? split.balance : 0), 0).toFixed(2)}
+              ${billSplit.reduce((sum, split) => sum + split.balance, 0).toFixed(2)}
             </div>
-            <div></div>
             <div></div>
           </div>
         </div>

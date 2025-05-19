@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useAuth0 } from '@auth0/auth0-react';
 import axios from 'axios';
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -25,6 +26,7 @@ const InviteGuests: React.FC = () => {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { isAuthenticated, getAccessTokenSilently } = useAuth0();
 
   const [event, setEvent] = useState<IEvent | null>(null);
   const [invitees, setInvitees] = useState<IInvitee[]>([]);
@@ -39,8 +41,18 @@ const InviteGuests: React.FC = () => {
 
   useEffect(() => {
     const fetchEvent = async () => {
+      if (!isAuthenticated) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        const response = await axios.get(`${API_URL}/api/events/${id}`);
+        const token = await getAccessTokenSilently();
+        const response = await axios.get(`${API_URL}/api/events/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
         setEvent(response.data);
         if (response.data.invitees) {
           const pendingInvitees = response.data.invitees.filter(
@@ -59,7 +71,7 @@ const InviteGuests: React.FC = () => {
     if (id) {
       fetchEvent();
     }
-  }, [id]);
+  }, [id, isAuthenticated, getAccessTokenSilently]);
 
   const handleAddInvitee = () => {
     if (!newInvitee.emailOrPhone.trim()) {
@@ -102,7 +114,15 @@ const InviteGuests: React.FC = () => {
 
     setIsSending(true);
     try {
-      await axios.post(`${API_URL}/api/events/${id}/invite`, { invitees });
+      const token = await getAccessTokenSilently();
+      await axios.post(`${API_URL}/api/events/${id}/invite`, 
+        { invitees },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
       alert(t('invite.success.sent'));
       navigate('/');
     } catch (error) {

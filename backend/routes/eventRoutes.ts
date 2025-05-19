@@ -225,8 +225,9 @@ router.get('/', checkJwt, async (req: Request, res: Response) => {
   }
 });
 
+
 // Get Event by ID
-router.get<{ id: string }>('/:id', async (req: Request<{ id: string }>, res: Response) => {
+router.get<{ id: string }>('/:id', checkJwt, async (req: Request<{ id: string }>, res: Response) => {
   try {
     const event = await EventModel.findById(req.params.id);
     

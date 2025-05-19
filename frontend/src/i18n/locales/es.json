@@ -29,7 +29,7 @@
     "create.bizmeet": "Crear Reunión Profesional",
     "create.protest": "Crear Protesta",
     "claim": "Reclamar",
-    "host": "anfitrión",
+    "host": "Anfitrión",
     "someone": "Alguien",
     "manage": {
       "title": "Gestionar Evento - {{eventName}}",
@@ -54,6 +54,7 @@
     "confirm": {
       "delete": "¿Estás seguro de que quieres eliminar este evento?"
     },
+    "splitBill": "Repartir gastos",
     "success": {
       "created": "¡Evento creado exitosamente!",
       "updated": "¡Evento actualizado exitosamente!",
@@ -97,7 +98,9 @@
     "organizer": "Organizador",
     "requirements": "Requisitos",
     "commonFields": "Información General",
-    "specificFields": "Información Específica del Evento"
+    "specificFields": "Información Específica del Evento",
+    "unauthorized": "No estás autorizado para gestionar este evento",
+    "loadFailed": "Error al cargar el evento"
   },
   "guest": {
     "view": "Vista de Invitado",
@@ -119,12 +122,12 @@
     "requestPayment": "Solicitar Pago",
     "sending": "Enviando...",
     "error": {
-      "missingContact": "No se puede enviar la solicitud de pago: Falta información de contacto",
-      "paymentRequestFailed": "Error al enviar el correo de solicitud de pago",
-      "noEmail": "No hay dirección de correo disponible"
+      "missingContact": "Falta información de contacto para esta persona",
+      "noEmail": "No hay dirección de correo disponible",
+      "paymentRequestFailed": "Error al enviar la solicitud de pago"
     },
     "success": {
-      "paymentRequestSent": "¡Correo de solicitud de pago enviado con éxito!"
+      "paymentRequestSent": "Solicitud de pago enviada con éxito"
     }
   },
   "invite": {
