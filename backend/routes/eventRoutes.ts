@@ -385,9 +385,9 @@ router.put<{ token: string }>('/invitee/:token/accept', async (req: Request<{ to
   console.log('req.body', req.body);
   try {
     const { token } = req.params;
-    const { hasAccepted } = req.body;
+    const { invitation } = req.body;
 
-    if (!hasAccepted) {
+    if (invitation !== 'accepted') {
       res.status(400).json({ message: 'Invalid invitation status' });
       return;
     }
@@ -404,10 +404,10 @@ router.put<{ token: string }>('/invitee/:token/accept', async (req: Request<{ to
       return;
     }
 
-    invitee.invitation = hasAccepted ? 'accepted' : 'rejected';
+    invitee.invitation = invitation;
     await event.save();
 
-    res.status(200).json({ message: `Invitation accepted successfully` });
+    res.status(200).json({ message: `Invitation ${invitation} successfully` });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Failed to update invitation status' });
