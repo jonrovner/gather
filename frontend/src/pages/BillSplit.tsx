@@ -176,32 +176,6 @@ const BillSplit: React.FC = () => {
     setPayments(calculatePayments(split));
   };
 
-  const handleSendPaymentRequest = async (person: string, amount: number, emailOrPhone?: string) => {
-    if (!event || !user || !emailOrPhone) {
-      alert(t('billSplit.error.missingContact'));
-      return;
-    }
-    
-    setIsSendingEmail(true);
-    try {
-      await axios.post(`${API_URL}/api/events/${event._id}/payment-request`, {
-        amount,
-        recipient: person,
-        recipientEmail: emailOrPhone,
-        eventName: event.name,
-        hostName: user.name || 'Host',
-        hostEmail: user.email
-      });
-      
-      alert(t('billSplit.success.paymentRequestSent'));
-    } catch (error) {
-      console.error('Error sending payment request:', error);
-      alert(t('billSplit.error.paymentRequestFailed'));
-    } finally {
-      setIsSendingEmail(false);
-    }
-  };
-
   const handleHostPayment = async (amount: number, to: string) => {
     if (!event || !user) {
       alert(t('billSplit.error.missingContact'));
