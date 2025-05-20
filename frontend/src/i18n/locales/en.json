@@ -138,6 +138,11 @@
     }
   },
   "billSplit": {
+    "markAsPaid": "Mark as Paid",
+    "processing": "Processing...",
+    "paymentInstructions": "Payment Instructions",
+    "paymentInstruction": "{{from}} should pay {{to}} ${{amount}}",
+    "noPaymentsNeeded": "No payments needed - everyone is settled!",
     "title": "Bill Split - {{eventName}}",
     "person": "Person",
     "paid": "Paid",

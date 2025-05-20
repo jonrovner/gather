@@ -44,17 +44,18 @@ const ManageEvent: React.FC = () => {
   const [newNeed, setNewNeed] = useState('');
   const [newNeedCost, setNewNeedCost] = useState('');
 
-  const getUserDisplayName = (userId: string) => {
-    if (userId === user?.sub) {
+  const getUserDisplayName = (name: string) => {
+    // If this is the current user (host), return "Host"
+    if (name === user?.name || name === user?.sub || name === t('event.host')) {
       return t('event.host');
     }
-    // If we have the user's name in the invitees list, use that
-    const invitee = event?.invitees.find(inv => inv.emailOrPhone === userId);
+    // If we have the name in the invitees list, use that
+    const invitee = event?.invitees.find(inv => inv.name === name);
     if (invitee?.name) {
       return invitee.name;
     }
-    // Otherwise return a generic identifier
-    return t('event.someone');
+    // Otherwise return the name as is
+    return name || t('event.someone');
   };
 
   useEffect(() => {
@@ -62,7 +63,7 @@ const ManageEvent: React.FC = () => {
       if (!isAuthenticated || !user?.sub) {
         return;
       }
-      console.log('user.access_token', user.access_token);
+      
       try {
         const token = await getAccessTokenSilently();
         const response = await axios.get(`${API_URL}/api/events/${id}`, {
@@ -128,7 +129,7 @@ const ManageEvent: React.FC = () => {
     updatedNeeds[index] = {
       ...updatedNeeds[index],
       status: 'claimed' as const,
-      claimedBy: user.sub
+      claimedBy: user.name || t('event.host')
     };
     setEvent({ ...event, needs: updatedNeeds });
   };
@@ -318,7 +319,7 @@ const ManageEvent: React.FC = () => {
           </ul>
         </div>
 
-        <div className="flex justify-between">
+        <div className="flex justify-evenly">
           <button
             type="submit"
             className="btn-primary bg-primary-600 hover:bg-primary-700"

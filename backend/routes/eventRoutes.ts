@@ -612,5 +612,45 @@ The Gather Team`
   }
 });
 
+// Remove Invitee by Token
+router.delete<{ token: string }>('/invitee/:token', checkJwt, async (req: Request<{ token: string }>, res: Response) => {
+  try {
+    const { token } = req.params;
+    const userId = req.auth?.payload.sub;
+
+    if (!userId) {
+      res.status(401).json({ message: 'User ID not found in token' });
+      return;
+    }
+
+    const event = await EventModel.findOne({ 'invitees.token': token }) as EventDocument;
+    if (!event) {
+      res.status(404).json({ message: 'Event not found' });
+      return;
+    }
+
+    // Check if the user is the event creator
+    if (event.creator !== userId) {
+      res.status(403).json({ message: 'Only the event creator can remove invitees' });
+      return;
+    }
+
+    const inviteeIndex = event.invitees.findIndex((i: IInvitee) => i.token === token);
+    if (inviteeIndex === -1) {
+      res.status(404).json({ message: 'Invitee not found' });
+      return;
+    }
+
+    // Remove the invitee from the array
+    event.invitees.splice(inviteeIndex, 1);
+    await event.save();
+
+    res.status(200).json({ message: 'Invitee removed successfully' });
+  } catch (err) {
+    console.error('Error removing invitee:', err);
+    res.status(500).json({ message: 'Failed to remove invitee' });
+  }
+});
+
 export default router;
 

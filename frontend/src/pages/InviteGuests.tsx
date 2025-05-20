@@ -54,11 +54,9 @@ const InviteGuests: React.FC = () => {
           }
         });
         setEvent(response.data);
+        
         if (response.data.invitees) {
-          const pendingInvitees = response.data.invitees.filter(
-            (invitee: IInvitee) => invitee.invitation !== 'accepted' && invitee.invitation !== 'rejected'
-          );
-          setInvitees(pendingInvitees);
+          setInvitees(response.data.invitees);
         }
       } catch (error) {
         console.error('Error fetching event:', error);
@@ -105,8 +103,40 @@ const InviteGuests: React.FC = () => {
     });
   };
 
-  const handleRemoveInvitee = (index: number) => {
-    setInvitees(invitees.filter((_, i) => i !== index));
+  const handleRemoveInvitee = async (index: number) => {
+    if (!isAuthenticated) {
+      alert(t('common.error.notAuthenticated'));
+      return;
+    }
+
+    const inviteeToRemove = invitees[index];
+    if (!window.confirm(t('invite.confirmRemove', { name: inviteeToRemove.name || inviteeToRemove.emailOrPhone }))) {
+      return;
+    }
+
+    try {
+      const token = await getAccessTokenSilently();
+      await axios.delete(`${API_URL}/api/events/invitee/${inviteeToRemove.token}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      setInvitees(invitees.filter((_, i) => i !== index));
+    } catch (error) {
+      console.error('Error removing invitee:', error);
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          alert(t('common.error.notAuthenticated'));
+        } else if (error.response?.status === 403) {
+          alert(t('common.error.notAuthorized'));
+        } else {
+          alert(t('invite.error.removeFailed'));
+        }
+      } else {
+        alert(t('invite.error.removeFailed'));
+      }
+    }
   };
 
   const handleSendInvitations = async () => {

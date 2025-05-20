@@ -42,6 +42,7 @@ const EventsList: React.FC = () => {
 
       try {
         const token = await getAccessTokenSilently();
+        console.log('token', token);
         // Fetch created events
         const createdResponse = await axios.get(`${API_URL}/api/events`, {
           headers: {

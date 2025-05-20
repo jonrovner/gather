@@ -6,8 +6,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 interface INeed {
   _id: string;
   item: string;
-  estimatedCost?: number;
-  actualCost?: number;
+  cost?: number;
   claimedBy?: string;
   status: 'open' | 'claimed';
 }
@@ -22,7 +21,7 @@ interface IEvent {
   invitee: {
     name: string;
     emailOrPhone: string;
-    hasAccepted: boolean;
+    invitation: string;
     claimedItems: string[];
   };
 }
@@ -33,7 +32,6 @@ const EventGuestView: React.FC = () => {
   const [event, setEvent] = useState<IEvent | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedNeed, setSelectedNeed] = useState<string | null>(null);
-  const [hasAccepted, setHasAccepted] = useState(false);
   const [isAccepting, setIsAccepting] = useState(false);
   const [actualCost, setActualCost] = useState<{ [key: string]: number }>({});
 
@@ -45,9 +43,9 @@ const EventGuestView: React.FC = () => {
         const response = await axios.get(`${API_URL}/api/events/guest/${token}`);
         const eventData = response.data;  
         console.log('Fetched event data:', eventData); // Debug log
+        console.log('Needs data:', eventData.needs); // Debug needs specifically
         
         setEvent(eventData);
-        setHasAccepted(eventData.invitee?.hasAccepted || false);
       } catch (error) {
         console.error('Error fetching event:', error);
         alert('Failed to load event details.');
@@ -93,16 +91,15 @@ const EventGuestView: React.FC = () => {
     setIsAccepting(true);
     try {
       await axios.put(`${API_URL}/api/events/invitee/${token}/accept`, {
-        hasAccepted: true 
+        invitation: 'accepted'
       });
       
-      setHasAccepted(true);
       // Update local state
       setEvent(prev => prev ? {
         ...prev,
         invitee: {
           ...prev.invitee,
-          hasAccepted: true
+          invitation: 'accepted'
         }
       } : null);
     } catch (error) {
@@ -135,7 +132,7 @@ const EventGuestView: React.FC = () => {
         ...prev,
         needs: prev.needs.map(need => 
           need._id === needId 
-            ? { ...need, actualCost: cost }
+            ? { ...need, cost: cost }
             : need
         )
       } : null);
@@ -156,7 +153,7 @@ const EventGuestView: React.FC = () => {
     return <div className="text-center p-4">Event not found</div>;
   }
 
-  if (!hasAccepted) {
+  if (event.invitee.invitation !== 'accepted') {
     return (
       <div className="max-w-xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
         <div className="mb-4 text-gray-600 dark:text-gray-400">
@@ -181,6 +178,10 @@ const EventGuestView: React.FC = () => {
       </div>
     );
   }
+
+  console.log('Event data:', event);
+  console.log('Invitee data:', event.invitee);
+  console.log('Has accepted:', event.invitee.invitation === 'accepted');
 
   return (
     <div className="max-w-xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
@@ -226,66 +227,64 @@ const EventGuestView: React.FC = () => {
         )}
 
         <ul className="space-y-2">
-          {event.needs.map((need) => (
-            <li 
-              key={need._id}
-              className="p-4 border rounded-lg dark:border-gray-700"
-            >
-              <div className="flex justify-between items-center">
-                <div>
-                  <span className="font-medium">{need.item}</span>
-                  <div className="text-sm mt-1">
-                    {typeof need.estimatedCost === 'number' && (
-                      <span className="text-gray-600 dark:text-gray-400 mr-3">
-                        Estimated: ${need.estimatedCost.toFixed(2)}
-                      </span>
-                    )}
-                    {typeof need.actualCost === 'number' && (
-                      <span className="text-green-600 dark:text-green-400 font-medium">
-                        Actual: ${need.actualCost.toFixed(2)}
-                      </span>
-                    )}
+          {event.needs.map((need) => {
+            console.log('Need item:', need.item, 'Cost:', need.cost);
+            return (
+              <li 
+                key={need._id}
+                className="p-4 border rounded-lg dark:border-gray-700"
+              >
+                <div className="flex justify-between items-center">
+                  <div>
+                    <span className="font-medium">{need.item}</span>
+                    <div className="text-sm mt-1">
+                      {need.cost && (
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Cost: ${Number(need.cost).toFixed(2)}
+                        </span>
+                      )}
+                    </div>
                   </div>
+                  {need.status === 'open' ? (
+                    <button
+                      className="btn bg-primary-600 hover:bg-primary-700"
+                      onClick={() => setSelectedNeed(need._id)}
+                    >
+                      Claim
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        Claimed 
+                      </span>
+                      {need.claimedBy === event.invitee.name && !need.cost && (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            className="input w-24 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                            placeholder="Cost"
+                            value={actualCost[need._id] || ''}
+                            onChange={(e) => setActualCost(prev => ({
+                              ...prev,
+                              [need._id]: parseFloat(e.target.value) || 0
+                            }))}
+                            min="0"
+                            step="0.01"
+                          />
+                          <button
+                            className="btn bg-green-600 hover:bg-green-700"
+                            onClick={() => handleUpdateCost(need._id)}
+                          >
+                            Post Cost
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-                {need.status === 'open' ? (
-                  <button
-                    className="btn bg-primary-600 hover:bg-primary-700"
-                    onClick={() => setSelectedNeed(need._id)}
-                  >
-                    Claim
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      Claimed 
-                    </span>
-                    {need.claimedBy === event.invitee.name && !need.actualCost && (
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="number"
-                          className="input w-24 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                          placeholder="Cost"
-                          value={actualCost[need._id] || ''}
-                          onChange={(e) => setActualCost(prev => ({
-                            ...prev,
-                            [need._id]: parseFloat(e.target.value) || 0
-                          }))}
-                          min="0"
-                          step="0.01"
-                        />
-                        <button
-                          className="btn bg-green-600 hover:bg-green-700"
-                          onClick={() => handleUpdateCost(need._id)}
-                        >
-                          Post Cost
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       </div>
     </div>
