@@ -4,7 +4,6 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import morgan from 'morgan';
-
 import eventRoutes from './routes/eventRoutes';
 
 dotenv.config();

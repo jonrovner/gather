@@ -3,7 +3,7 @@ import { Router, Request, Response } from 'express';
 import { EventModel, IEvent, IEatery, ITrip, IProtest, INeed, IInvitee, IDestination } from '../models/event.model';
 import { v4 as uuidv4 } from 'uuid';
 import mongoose from 'mongoose';
-import nodemailer from 'nodemailer';
+import { Recipient, EmailParams, MailerSend, Sender } from 'mailersend';
 import dotenv from 'dotenv';
 import { auth } from 'express-oauth2-jwt-bearer';
 
@@ -18,18 +18,15 @@ const checkJwt = auth({
 // Add EventDocument type definition
 type EventDocument = mongoose.Document & IEvent;
 
-const transporter = nodemailer.createTransport({
-  host: 'smtp.mailersend.net',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USERNAME,
-    pass: process.env.EMAIL_PASSWORD,
-  },
+const mailersend = new MailerSend({
+  apiKey: process.env.MAILER_TOKEN || '',
 });
 
 // Add a default "from" address using a verified domain
-const DEFAULT_FROM_EMAIL = 'noreply@test-51ndgwvro6rlzqx8.mlsender.net'; // Replace with your verified domain
+const DEFAULT_FROM_EMAIL = 'noreply@juntadita.com'; // Using your verified domain
+const DEFAULT_FROM_NAME = 'Juntadita';
+
+const defaultSender = new Sender(DEFAULT_FROM_EMAIL, DEFAULT_FROM_NAME);
 
 type SupportedLanguage = 'en' | 'es';
 
@@ -340,22 +337,23 @@ router.post<{ id: string }>('/:id/invite', async (req: Request<{ id: string }>, 
           day: 'numeric'
         });
 
-        const mailOptions = {
-          from: DEFAULT_FROM_EMAIL,
-          to: invitee.emailOrPhone,
-          subject: template.subject(event.name),
-          text: template.body(
+        const recipients = [new Recipient(invitee.emailOrPhone, invitee.name)];
+        
+        const emailParams = new EmailParams()
+          .setFrom(defaultSender)
+          .setTo(recipients)
+          .setSubject(template.subject(event.name))
+          .setText(template.body(
             invitee.name,
             event.hostName,
             event.name,
             formattedDate,
             event.location,
             invitationUrl
-          ),
-        };
+          ));
 
         try {
-          await transporter.sendMail(mailOptions);
+          await mailersend.email.send(emailParams);
         } catch (emailErr) {
           console.error(`Failed to send email to ${invitee.emailOrPhone}:`, emailErr);
           // Continue with other invitees even if one email fails
@@ -584,11 +582,13 @@ router.post<{ id: string }>('/:id/payment-request', async (req: Request<{ id: st
   try {
     const { amount, recipient, recipientEmail, eventName, hostName, hostEmail } = req.body;
 
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: recipientEmail,
-      subject: `Payment Request for ${eventName}`,
-      text: `Hi ${recipient},
+    const recipients = [new Recipient(recipientEmail, recipient)];
+    
+    const emailParams = new EmailParams()
+      .setFrom(defaultSender)
+      .setTo(recipients)
+      .setSubject(`Payment Request for ${eventName}`)
+      .setText(`Hi ${recipient},
 
 ${hostName} has requested payment for ${eventName}.
 
@@ -601,10 +601,9 @@ ${hostEmail}
 Thank you for your prompt payment!
 
 Best regards,
-The Gather Team`
-    };
+The Gather Team`);
 
-    await transporter.sendMail(mailOptions);
+    await mailersend.email.send(emailParams);
     res.status(200).json({ message: 'Payment request email sent successfully' });
   } catch (err) {
     console.error('Error sending payment request email:', err);
