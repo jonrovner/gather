@@ -2,8 +2,8 @@
   "common": {
     "home": "Inicio",
     "createEvent": "Crear Evento",
-    "welcome": "Bienvenido a Juntadita",
-    "welcomeSubtitle": "Crea y gestiona eventos",
+    "welcome": "Hola, esto es Juntadita",
+    "welcomeSubtitle": "Para crear y gestionar eventos, invitados y gastos",
     "light": "Claro",
     "dark": "Oscuro",
     "loading": "Cargando...",
