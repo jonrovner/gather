@@ -5,6 +5,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import morgan from 'morgan';
 import eventRoutes from './routes/eventRoutes';
+import rateLimit from 'express-rate-limit';
+import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
 
@@ -16,6 +18,30 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('dev')); // Using 'dev' format for development
 
+// Create rate limiter
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again after 15 minutes',
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+// Email sending rate limiter
+const emailLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10,
+  message: 'Too many email requests, please try again after an hour',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply rate limiting to all routes
+app.use(limiter);
+
+// Apply rate limiting to email sending routes  
+app.use('/api/events/:id/invite', emailLimiter);
+
 // Routes
 app.use('/api/events', eventRoutes);
 
@@ -23,6 +49,9 @@ app.use('/api/events', eventRoutes);
 app.get('/', (req: Request, res: Response) => {
   res.send('Welcome to Gather API 🚀');
 });
+
+// Error handling middleware (should be after all routes)
+app.use(errorHandler);
 
 // MongoDB Connection
 mongoose

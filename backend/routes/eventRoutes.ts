@@ -6,6 +6,9 @@ import mongoose from 'mongoose';
 import { Recipient, EmailParams, MailerSend, Sender } from 'mailersend';
 import dotenv from 'dotenv';
 import { auth } from 'express-oauth2-jwt-bearer';
+import { createEventValidation } from '../validations/eventValidations';
+import { validate } from '../middleware/validation';
+import { asyncHandler, ValidationError, NotFoundError } from '../middleware/errorHandler';
 
 dotenv.config();
 
@@ -48,7 +51,7 @@ const emailTemplates: Record<SupportedLanguage, {
     subject: (eventName: string) => `¡Estás invitado a ${eventName}!`,
     body: (inviteeName: string, hostName: string, eventName: string, eventDate: string, eventLocation: string, invitationUrl: string) => 
       `¡Hola ${inviteeName}! ${hostName} te ha invitado a ${eventName} el ${eventDate} en ${eventLocation}.
-      Para ver el evento y reclamar necesidades, haz clic en este enlace: ${invitationUrl}
+      Para ver el evento y aportar a las necesidades, haz clic en este enlace: ${invitationUrl}
       
       Importante: Este enlace de invitación es único para ti y no debe compartirse. Proporciona acceso a tu invitación personal a ${eventName}.
       Si compartes este enlace, otros podrían aceptar la invitación o reclamar artículos en tu nombre.`
@@ -63,136 +66,59 @@ function hasNeeds(event: IEvent): event is IEatery | ITrip | IProtest {
 }
 
 // Create Event
-router.post('/', async (req: Request, res: Response) => {
-  console.log('req.body', req.body);
-  try {
-    const {
-      name,
-      description,
-      date,
-      location,
-      creator,
-      hostName,
-      eventType,
-      needs = [],
-      reminderMethod,
-      languagePreference = 'en', // Default to English if not specified
-      // Type-specific fields
-      destinations = [],
-      dresscode,
-      agenda,
-      manifesto,
-    } = req.body;
+router.post('/', validate(createEventValidation), asyncHandler(async (req: Request, res: Response) => {
+  const {
+    name,
+    description,
+    date,
+    location,
+    creator,
+    hostName,
+    eventType,
+    needs = [],
+    reminderMethod,
+    languagePreference = 'en',
+    destinations = [],
+    dresscode,
+    agenda,
+    manifesto,
+  } = req.body;
 
-    // Validate required fields
-    if (!name || !date || !location || !creator || !hostName || !eventType) {
-      res.status(400).json({ 
-        message: 'Missing required fields',
-        required: ['name', 'date', 'location', 'creator', 'hostName', 'eventType']
-      });
-      return;
-    }
+  const baseEvent = {
+    name,
+    description,
+    date,
+    location,
+    creator,
+    hostName,
+    eventType,
+    needs: needs.map((need: Omit<INeed, '_id'>) => ({ 
+      ...need, 
+      _id: uuidv4(),
+      status: 'open'
+    })),
+    invitees: [],
+    reminderMethod,
+    languagePreference,
+  };
 
-    // Validate event type and its required fields
-    switch (eventType) {
-      case 'trip':
-        if (!Array.isArray(destinations) || destinations.length === 0) {
-          res.status(400).json({ 
-            message: 'Trip events require at least one destination',
-            required: ['destinations']
-          });
-          return;
-        }
-        // Validate each destination has required fields
-        for (const dest of destinations) {
-          if (!dest.name || !dest.arrivalDate || !dest.departureDate || !dest.accommodation) {
-            res.status(400).json({ 
-              message: 'Each destination must have name, arrival date, departure date, and accommodation',
-              required: ['name', 'arrivalDate', 'departureDate', 'accommodation']
-            });
-            return;
-          }
-        }
-        break;
-      case 'bizmeet':
-        if (!dresscode || !agenda) {
-          res.status(400).json({ 
-            message: 'Business meeting events require dresscode and agenda',
-            required: ['dresscode', 'agenda']
-          });
-          return;
-        }
-        break;
-      case 'protest':
-        if (!manifesto) {
-          res.status(400).json({ 
-            message: 'Protest events require a manifesto',
-            required: ['manifesto']
-          });
-          return;
-        }
-        break;
-      case 'eatery':
-        // No additional required fields for eatery events
-        break;
-      default:
-        res.status(400).json({ 
-          message: 'Invalid event type',
-          validTypes: ['eatery', 'trip', 'bizmeet', 'protest']
-        });
-        return;
-    }
-
-    const baseEvent = {
-      name,
-      description,
-      date,
-      location,
-      creator,
-      hostName,
-      eventType,
-      needs: needs.map((need: Omit<INeed, '_id'>) => ({ 
-        ...need, 
-        _id: uuidv4(),
-        status: 'open'
-      })),
-      invitees: [], // Initialize with empty array since invitees will be added later
-      reminderMethod,
-      languagePreference,
-    };
-
-    // Add type-specific fields
-    const eventData = {
-      ...baseEvent,
-      ...(eventType === 'trip' && { 
-        destinations: destinations.map((dest: Omit<IDestination, '_id'>) => ({
-          ...dest,
-          _id: uuidv4()
-        }))
-      }),
-      ...(eventType === 'bizmeet' && { dresscode, agenda }),
-      ...(eventType === 'protest' && { manifesto }),
-    };
-    console.log('eventData', eventData);
-    
-    const newEvent = new EventModel(eventData);
-    await newEvent.save();
-    res.status(201).json(newEvent);
-  } catch (err: unknown) {
-    console.error('Error creating event:', err);
-    if (err instanceof mongoose.Error.ValidationError) {
-      res.status(400).json({ 
-        message: 'Validation error',
-        errors: Object.values(err.errors).map(e => e.message)
-      });
-      return;
-    }
-    res.status(500).json({ 
-      message: 'Failed to create event',
-      error: err instanceof Error ? err.message : 'Unknown error'
-    });
-  }
-});
+  // Add type-specific fields
+  const eventData = {
+    ...baseEvent,
+    ...(eventType === 'trip' && { 
+      destinations: destinations.map((dest: Omit<IDestination, '_id'>) => ({
+        ...dest,
+        _id: uuidv4()
+      }))
+    }),
+    ...(eventType === 'bizmeet' && { dresscode, agenda }),
+    ...(eventType === 'protest' && { manifesto }),
+  };
+  
+  const newEvent = new EventModel(eventData);
+  await newEvent.save();
+  res.status(201).json(newEvent);
+}));
 
 // Get All Events (for dev/testing)
 router.get('/', checkJwt, async (req: Request, res: Response) => {
@@ -203,15 +129,6 @@ router.get('/', checkJwt, async (req: Request, res: Response) => {
       return;
     }
     const query = { creator: userId };
-
-  /* const { creator } = req.query;
-    let query = {};
-    
-      if (creator) {
-        query = { creator };
-      }
-    */ 
-
 
     const events = await EventModel.find(query);
     //console.log('events', events);

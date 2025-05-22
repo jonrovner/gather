@@ -70,6 +70,36 @@ const Navbar: React.FC = () => {
   )
 }
 
+const Footer: React.FC = () => {
+  const currentYear = new Date().getFullYear()
+  
+  return (
+    <footer className="mt-8 py-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="container mx-auto px-4 text-center text-gray-600 dark:text-gray-400">
+        <p>© {currentYear} Jona Rovner. All rights reserved.</p>
+        <div className="mt-2 space-x-4">
+          <a 
+            href="https://rovners.com" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="hover:text-primary-600 dark:hover:text-primary-400"
+          >
+            Portfolio
+          </a>
+          <a 
+            href="https://github.com/jonrovner" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="hover:text-primary-600 dark:hover:text-primary-400"
+          >
+            GitHub
+          </a>
+        </div>
+      </div>
+    </footer>
+  )
+}
+
 const App: React.FC = () => {
   const { t } = useTranslation()
 
@@ -96,8 +126,8 @@ const App: React.FC = () => {
       }}
     >
       <Router>
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-          <div className="container mx-auto p-4">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+          <div className="container mx-auto p-4 flex-grow">
             <Navbar />
             
             <Routes>
@@ -120,6 +150,7 @@ const App: React.FC = () => {
               <Route path="/events/:id/bill-split" element={<BillSplit />} />
             </Routes>
           </div>
+          <Footer />
         </div>
       </Router>
     </Auth0Provider>

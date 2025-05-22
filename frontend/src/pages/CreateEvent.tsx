@@ -52,6 +52,7 @@ const CreateEvent: React.FC = () => {
     }
     return {};
   });
+  const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
 
   // Validate event type
   useEffect(() => {
@@ -89,6 +90,7 @@ const CreateEvent: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setValidationErrors({});
     if (!isAuthenticated || !user || !type || !user.sub) return;
 
     try {
@@ -111,17 +113,20 @@ const CreateEvent: React.FC = () => {
         ...eventTypeData,
       };
 
-     
       const response = await axios.post(`${API_URL}/api/events`, payload);
       if (response.status === 201) {
-        
         navigate(`/events/${response.data._id}/invite`);
+      }
+    } catch (error: any) {
+      console.error('❌ Error creating event:', error);
+      if (error.response?.data?.errors) {
+        setValidationErrors(error.response.data.errors);
+        // Show the first error message in an alert
+        const firstError = Object.values(error.response.data.errors)[0];
+        alert(firstError);
       } else {
         alert(t('event.error.create'));
       }
-    } catch (error) {
-      console.error('❌ Error creating event:', error);
-      alert(t('event.error.create'));
     }
   };
 
@@ -131,34 +136,62 @@ const CreateEvent: React.FC = () => {
         {t(`event.create.${type}`)}
       </h2>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input 
-          className="input dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
-          placeholder={t('event.name')} 
-          value={name} 
-          onChange={(e) => setName(e.target.value)} 
-          required 
-        />
-        <textarea 
-          className="input dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
-          placeholder={t('event.description')} 
-          value={description} 
-          onChange={(e) => setDescription(e.target.value)} 
-        />
-        <input 
-          className="input dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
-          type="datetime-local" 
-          value={date} 
-          onChange={(e) => setDate(e.target.value)} 
-          min={new Date().toISOString().slice(0, 16)}
-          required 
-        />
-        <input 
-          className="input dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
-          placeholder={t('event.location')} 
-          value={location} 
-          onChange={(e) => setLocation(e.target.value)} 
-          required 
-        />
+        <div>
+          <input 
+            className={`input dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+              validationErrors.name ? 'border-red-500' : ''
+            }`}
+            placeholder={t('event.name')} 
+            value={name} 
+            onChange={(e) => setName(e.target.value)} 
+            required 
+          />
+          {validationErrors.name && (
+            <p className="text-red-500 text-sm mt-1">{validationErrors.name}</p>
+          )}
+        </div>
+        <div>
+          <textarea 
+            className={`input dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+              validationErrors.description ? 'border-red-500' : ''
+            }`}
+            placeholder={t('event.description')} 
+            value={description} 
+            onChange={(e) => setDescription(e.target.value)} 
+          />
+          {validationErrors.description && (
+            <p className="text-red-500 text-sm mt-1">{validationErrors.description}</p>
+          )}
+        </div>
+        <div>
+          <input 
+            className={`input dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+              validationErrors.date ? 'border-red-500' : ''
+            }`}
+            type="datetime-local" 
+            value={date} 
+            onChange={(e) => setDate(e.target.value)} 
+            min={new Date().toISOString().slice(0, 16)}
+            required 
+          />
+          {validationErrors.date && (
+            <p className="text-red-500 text-sm mt-1">{validationErrors.date}</p>
+          )}
+        </div>
+        <div>
+          <input 
+            className={`input dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+              validationErrors.location ? 'border-red-500' : ''
+            }`}
+            placeholder={t('event.location')} 
+            value={location} 
+            onChange={(e) => setLocation(e.target.value)} 
+            required 
+          />
+          {validationErrors.location && (
+            <p className="text-red-500 text-sm mt-1">{validationErrors.location}</p>
+          )}
+        </div>
 
         <EventForms
           type={type}
