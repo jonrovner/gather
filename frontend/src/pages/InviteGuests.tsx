@@ -233,8 +233,8 @@ const InviteGuests: React.FC = () => {
             <h3 className="font-semibold mb-2">{t('invite.guestList')}</h3>
             <ul className="space-y-2">
               {invitees.map((invitee, index) => (
-                <li key={index} className="flex justify-between items-center p-2 bg-gray-50 dark:bg-gray-700 rounded">
-                  <div>
+                <li key={index} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-2 bg-gray-50 dark:bg-gray-700 rounded gap-2">
+                  <div className="flex-grow">
                     <span className="font-medium">{invitee.name || t('invite.anonymous')}</span>
                     <span className="text-gray-600 dark:text-gray-400"> - {invitee.emailOrPhone}</span>
                     <span className="text-sm text-gray-500"> ({invitee.reminderPreference})</span>

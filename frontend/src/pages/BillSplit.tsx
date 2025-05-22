@@ -230,18 +230,18 @@ const BillSplit: React.FC = () => {
       </div>
 
       <div className="space-y-4">
-        <div className="grid grid-cols-4 gap-2 font-semibold text-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 font-semibold text-sm">
           <div>{t('billSplit.person')}</div>
           <div className="text-right">{t('billSplit.paid')}</div>
-          <div className="text-right">{t('billSplit.owes')}</div>
+          <div className="hidden sm:block text-right">{t('billSplit.owes')}</div>
           <div className="text-right">{t('billSplit.balance')}</div>
         </div>
 
         {billSplit.map((split, index) => (
-          <div key={index} className="grid grid-cols-4 gap-2 text-sm items-center">
+          <div key={index} className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm items-center">
             <div>{split.person}</div>
             <div className="text-right">${split.paid.toFixed(2)}</div>
-            <div className="text-right">${split.owes.toFixed(2)}</div>
+            <div className="hidden sm:block text-right">${split.owes.toFixed(2)}</div>
             <div className={`text-right ${split.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               ${split.balance.toFixed(2)}
             </div>
@@ -249,12 +249,12 @@ const BillSplit: React.FC = () => {
         ))}
 
         <div className="border-t pt-2 mt-2">
-          <div className="grid grid-cols-4 gap-2 font-semibold">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 font-semibold">
             <div>{t('billSplit.total')}</div>
             <div className="text-right">
               ${billSplit.reduce((sum, split) => sum + split.paid, 0).toFixed(2)}
             </div>
-            <div className="text-right">
+            <div className="hidden sm:block text-right">
               ${billSplit.reduce((sum, split) => sum + split.owes, 0).toFixed(2)}
             </div>
             <div className="text-right">

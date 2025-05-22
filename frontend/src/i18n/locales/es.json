@@ -47,7 +47,7 @@
     "needPlaceholder": "¿Qué necesitas?",
     "cost": "Costo",
     "open": "Disponible",
-    "claimed": "Reclamado por {{by}}",
+    "claimed": "Aportado por {{by}}",
     "notFound": "Evento no encontrado",
     "noInvitees": "Aún no hay invitados",
     "delete": "Eliminar Evento",

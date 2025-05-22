@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 const API_URL = import.meta.env.VITE_API_URL;
 
 interface INeed {
@@ -27,6 +28,7 @@ interface IEvent {
 }
 
 const EventGuestView: React.FC = () => {
+  const { t } = useTranslation();
   const { token } = useParams<{ token: string }>();
 
   const [event, setEvent] = useState<IEvent | null>(null);
@@ -146,26 +148,26 @@ const EventGuestView: React.FC = () => {
   };
 
   if (isLoading) {
-    return <div className="text-center p-4">Loading...</div>;
+    return <div className="text-center p-4">{t('common.loading')}</div>;
   }
 
   if (!event) {
-    return <div className="text-center p-4">Event not found</div>;
+    return <div className="text-center p-4">{t('event.notFound')}</div>;
   }
 
   if (event.invitee.invitation !== 'accepted') {
     return (
       <div className="max-w-xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
         <div className="mb-4 text-gray-600 dark:text-gray-400">
-          Invited name: {event.invitee.name}
+          {t('invite.title', { eventName: event.name })}
         </div>
         <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">{event.name}</h2>
         
         <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-          <h3 className="font-semibold mb-2">Event Details</h3>
-          <p>Date: {new Date(event.date).toLocaleString()}</p>
-          <p>Location: {event.location}</p>
-          {event.description && <p className="mt-2">{event.description}</p>}
+          <h3 className="font-semibold mb-2 text-gray-900 dark:text-white">{t('event.details')}</h3>
+          <p className="text-gray-700 dark:text-gray-300">{t('event.date')}: {new Date(event.date).toLocaleString()}</p>
+          <p className="text-gray-700 dark:text-gray-300">{t('event.location')}: {event.location}</p>
+          {event.description && <p className="mt-2 text-gray-700 dark:text-gray-300">{event.description}</p>}
         </div>
 
         <button
@@ -173,7 +175,7 @@ const EventGuestView: React.FC = () => {
           onClick={handleAcceptInvitation}
           disabled={isAccepting}
         >
-          {isAccepting ? 'Accepting...' : 'Accept Invitation'}
+          {isAccepting ? t('common.saving') : t('guest.accept')}
         </button>
       </div>
     );
@@ -186,26 +188,26 @@ const EventGuestView: React.FC = () => {
   return (
     <div className="max-w-xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
       <div className="mb-4 text-gray-600 dark:text-gray-400">
-        Logged in as: {event.invitee.name}
+        {t('guest.view')}: {event.invitee.name}
       </div>
       <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">{event.name}</h2>
       
       <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-        <h3 className="font-semibold mb-2">Event Details</h3>
-        <p>Date: {new Date(event.date).toLocaleString()}</p>
-        <p>Location: {event.location}</p>
-        {event.description && <p className="mt-2">{event.description}</p>}
+        <h3 className="font-semibold mb-2 text-gray-900 dark:text-white">{t('event.details')}</h3>
+        <p className="text-gray-700 dark:text-gray-300">{t('event.date')}: {new Date(event.date).toLocaleString()}</p>
+        <p className="text-gray-700 dark:text-gray-300">{t('event.location')}: {event.location}</p>
+        {event.description && <p className="mt-2 text-gray-700 dark:text-gray-300">{event.description}</p>}
       </div>
 
       <div>
-        <h3 className="text-xl font-semibold mb-4">Items Needed</h3>
+        <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">{t('event.needs')}</h3>
         
         {selectedNeed && (
           <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-            <h4 className="font-semibold mb-2">Claim Item</h4>
+            <h4 className="font-semibold mb-2 text-gray-900 dark:text-white">{t('event.claim')}</h4>
             <input
               className="input dark:bg-gray-700 dark:border-gray-600 dark:text-white mb-2"
-              placeholder="Your Name"
+              placeholder={t('invite.namePlaceholder')}
               value={event.invitee.name}
               readOnly
             />
@@ -214,13 +216,13 @@ const EventGuestView: React.FC = () => {
                 className="btn bg-primary-600 hover:bg-primary-700"
                 onClick={() => handleClaimItem(selectedNeed)}
               >
-                Confirm Claim
+                {t('event.claim')}
               </button>
               <button
                 className="btn bg-gray-600 hover:bg-gray-700"
                 onClick={() => setSelectedNeed(null)}
               >
-                Cancel
+                {t('common.back')}
               </button>
             </div>
           </div>
@@ -236,11 +238,11 @@ const EventGuestView: React.FC = () => {
               >
                 <div className="flex justify-between items-center">
                   <div>
-                    <span className="font-medium">{need.item}</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{need.item}</span>
                     <div className="text-sm mt-1">
                       {need.cost && (
                         <span className="text-gray-600 dark:text-gray-400">
-                          Cost: ${Number(need.cost).toFixed(2)}
+                          {t('event.cost')}: ${Number(need.cost).toFixed(2)}
                         </span>
                       )}
                     </div>
@@ -250,19 +252,19 @@ const EventGuestView: React.FC = () => {
                       className="btn bg-primary-600 hover:bg-primary-700"
                       onClick={() => setSelectedNeed(need._id)}
                     >
-                      Claim
+                      {t('event.claim')}
                     </button>
                   ) : (
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-gray-600 dark:text-gray-400">
-                        Claimed 
+                        {t('event.claimed', { by: need.claimedBy })}
                       </span>
                       {need.claimedBy === event.invitee.name && !need.cost && (
                         <div className="flex items-center gap-2">
                           <input
                             type="number"
                             className="input w-24 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                            placeholder="Cost"
+                            placeholder={t('event.cost')}
                             value={actualCost[need._id] || ''}
                             onChange={(e) => setActualCost(prev => ({
                               ...prev,
@@ -275,7 +277,7 @@ const EventGuestView: React.FC = () => {
                             className="btn bg-green-600 hover:bg-green-700"
                             onClick={() => handleUpdateCost(need._id)}
                           >
-                            Post Cost
+                            {t('common.save')}
                           </button>
                         </div>
                       )}

@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'
 import { Auth0Provider, useAuth0 } from '@auth0/auth0-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import CreateEvent from './pages/CreateEvent'
 import EventTypeSelector from './components/EventTypeSelector'
@@ -13,6 +13,7 @@ import BillSplit from './pages/BillSplit'
 const Navbar: React.FC = () => {
   const { t, i18n } = useTranslation()
   const { isAuthenticated, loginWithRedirect, logout } = useAuth0()
+  const [isDarkMode, setIsDarkMode] = useState(document.documentElement.classList.contains('dark'))
   
   const onLogout = () => {
     logout({
@@ -22,21 +23,30 @@ const Navbar: React.FC = () => {
     })
   }
 
+  const toggleDarkMode = () => {
+    const newDarkMode = !isDarkMode
+    setIsDarkMode(newDarkMode)
+    document.documentElement.classList.toggle('dark')
+    localStorage.setItem('darkMode', newDarkMode.toString())
+  }
+
   return (
-    <nav className="mb-8 flex gap-4 items-center">
-      <Link 
-        to="/" 
-        className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
-      >
-        {t('common.home')}
-      </Link>
-      <Link 
-        to="/create-event" 
-        className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
-      >
-        {t('common.createEvent')}
-      </Link>
-      <div className="ml-auto flex gap-2">
+    <nav className="mb-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+      <div className="flex flex-col sm:flex-row gap-4">
+        <Link 
+          to="/" 
+          className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+        >
+          {t('common.home')}
+        </Link>
+        <Link 
+          to="/create-event" 
+          className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+        >
+          {t('common.createEvent')}
+        </Link>
+      </div>
+      <div className="flex flex-wrap gap-2 w-full sm:w-auto sm:ml-auto">
         <button
           onClick={() => {
             const newLang = i18n.language === 'en' ? 'es' : 'en'
@@ -47,14 +57,10 @@ const Navbar: React.FC = () => {
           {i18n.language === 'en' ? '🇺🇸 EN' : '🇪🇸 ES'}
         </button>
         <button
-          onClick={() => {
-            const isDark = document.documentElement.classList.contains('dark')
-            document.documentElement.classList.toggle('dark')
-            localStorage.setItem('darkMode', (!isDark).toString())
-          }}
+          onClick={toggleDarkMode}
           className="px-3 py-1 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
         >
-          {document.documentElement.classList.contains('dark') ? `🌙 ${t('common.dark')}` : `🌞 ${t('common.light')}`}
+          {isDarkMode ? `🌙 ${t('common.dark')}` : `🌞 ${t('common.light')}`}
         </button>
         {isAuthenticated ? (
           <button 
@@ -127,16 +133,16 @@ const App: React.FC = () => {
     >
       <Router>
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
-          <div className="container mx-auto p-4 flex-grow">
+          <div className="container mx-auto px-4 sm:px-6 py-4 flex-grow">
             <Navbar />
             
             <Routes>
               <Route path="/" element={
                 <div>
-                  <h1 className="text-4xl font-bold mb-8 text-gray-900 dark:text-white">
+                  <h1 className="text-3xl sm:text-4xl font-bold mb-4 sm:mb-8 text-gray-900 dark:text-white">
                     {t('common.welcome')}
                   </h1>
-                  <p className="text-gray-700 dark:text-gray-300 mb-8">
+                  <p className="text-gray-700 dark:text-gray-300 mb-4 sm:mb-8">
                     {t('common.welcomeSubtitle')}
                   </p>
                   <EventsList />

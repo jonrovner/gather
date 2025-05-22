@@ -103,8 +103,8 @@ const EventsList: React.FC = () => {
       key={event._id}
       className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow"
     >
-      <div className="flex justify-between items-start">
-        <div>
+      <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+        <div className="flex-grow">
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
             {event.name}
           </h3>
@@ -123,13 +123,13 @@ const EventsList: React.FC = () => {
             {t('event.hostedBy', { host: event.hostName })}
           </p>
         </div>
-        <div className="text-right">
+        <div className="flex flex-col items-end gap-2">
           <p className="text-sm text-gray-600 dark:text-gray-400">
             {t('event.itemsNeeded', { count: event.needs.filter(need => need.status === 'open').length })}
           </p>
           <Link
             to={`/events/${event._id}/manage`}
-            className="mt-2 inline-block px-3 py-1 text-sm bg-primary-600 text-white rounded hover:bg-primary-700"
+            className="px-3 py-1 text-sm bg-primary-600 text-white rounded hover:bg-primary-700"
           >
             {t('event.manage.button')}
           </Link>

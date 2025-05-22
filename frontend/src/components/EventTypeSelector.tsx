@@ -21,7 +21,7 @@ const EventTypeSelector: React.FC = () => {
   return (
     <div className="max-w-xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-xl shadow-md">
       <h2 className="text-2xl text-center font-bold mb-6 text-gray-900 dark:text-white">{t('event.selectType')}</h2>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <button
           type="button"
           className="p-6 rounded-lg border bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-primary-50 dark:hover:bg-primary-900 transition-colors flex flex-col items-center"
