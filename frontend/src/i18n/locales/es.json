@@ -133,10 +133,10 @@
   "invite": {
     "title": "Invitar Invitados a {{eventName}}",
     "addGuests": "Agregar Invitados",
-    "namePlaceholder": "Nombre (opcional)",
+    "namePlaceholder": "Nombre",
     "contactPlaceholder": "Correo o Teléfono",
     "emailReminders": "Recordatorios por Correo",
-    "smsReminders": "Recordatorios por SMS",
+    "smsReminders": "Recordatorios por SMS (próximamente)",
     "addGuest": "Agregar Invitado",
     "guestList": "Lista de Invitados",
     "anonymous": "Anónimo",

@@ -112,10 +112,10 @@
   "invite": {
     "title": "Invite Guests to {{eventName}}",
     "addGuests": "Add Guests",
-    "namePlaceholder": "Name (optional)",
+    "namePlaceholder": "Name",
     "contactPlaceholder": "Email or Phone",
     "emailReminders": "Email Reminders",
-    "smsReminders": "SMS Reminders",
+    "smsReminders": "SMS Reminders (coming soon)",
     "addGuest": "Add Guest",
     "guestList": "Guest List",
     "anonymous": "Anonymous",

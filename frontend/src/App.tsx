@@ -9,6 +9,7 @@ import EventGuestView from './pages/EventGuestView'
 import EventsList from './components/EventsList'
 import ManageEvent from './pages/ManageEvent'
 import BillSplit from './pages/BillSplit'
+import logo from './assets/juntadita-logo.png'
 
 const Navbar: React.FC = () => {
   const { t, i18n } = useTranslation()
@@ -32,19 +33,24 @@ const Navbar: React.FC = () => {
 
   return (
     <nav className="mb-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-      <div className="flex flex-col sm:flex-row gap-4">
-        <Link 
-          to="/" 
-          className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
-        >
-          {t('common.home')}
+      <div className="flex items-center gap-4">
+        <Link to="/" className="flex items-center">
+          <img src={logo} alt="Juntadita Logo" className="h-8 w-auto" />
         </Link>
-        <Link 
-          to="/create-event" 
-          className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
-        >
-          {t('common.createEvent')}
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Link 
+            to="/" 
+            className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+          >
+            {t('common.home')}
+          </Link>
+          <Link 
+            to="/create-event" 
+            className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+          >
+            {t('common.createEvent')}
+          </Link>
+        </div>
       </div>
       <div className="flex flex-wrap gap-2 w-full sm:w-auto sm:ml-auto">
         <button
